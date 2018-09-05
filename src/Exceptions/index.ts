@@ -7,10 +7,11 @@ export function printError(err: Error): string {
     return VError.fullStack(err);
 }
 
-export function throwError(errName: RavenErrorType);
-export function throwError(errName: RavenErrorType, message: string);
-export function throwError(errName: RavenErrorType, message: string, errCause?: Error);
-export function throwError(errName: RavenErrorType, message: string, errCause?: Error, info?: { [key: string]: any });
+export function throwError(errName: RavenErrorType): never;
+export function throwError(errName: RavenErrorType, message: string): never;
+export function throwError(errName: RavenErrorType, message: string, errCause?: Error): never;
+export function throwError(
+    errName: RavenErrorType, message: string, errCause?: Error, info?: { [key: string]: any }): never;
 export function throwError(
   errName: RavenErrorType | string = "RavenException", 
   message?: string, 
