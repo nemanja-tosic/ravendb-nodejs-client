@@ -16,6 +16,8 @@ import { IAuthOptions } from "../Auth/AuthOptions";
 import {BulkInsertOperation} from "./BulkInsertOperation";
 import {IDatabaseChanges} from "./Changes/IDatabaseChanges";
 import {DatabaseChanges} from "./Changes/DatabaseChanges";
+import {EvictItemsFromCacheBasedOnChanges} from "./Changes/EvictItemsFromCacheBasedOnChanges";
+import {Lazy} from "./Lazy";
 
 const log = getLogger({ module: "DocumentStore" });
 
@@ -25,9 +27,8 @@ export class DocumentStore extends DocumentStoreBase {
         getLogger({ module: "DocumentStore-" + Math.floor(Math.random() * 1000) });
 
     private readonly _databaseChanges: Map<string, IDatabaseChanges> = new Map();
-    // TBD: private ConcurrentDictionary<string, Lazy<EvictItemsFromCacheBasedOnChanges>> _aggressiveCacheChanges =
-    // new ConcurrentDictionary<string, Lazy<EvictItemsFromCacheBasedOnChanges>>();
-    // TBD: private readonly ConcurrentDictionary<string, EvictItemsFromCacheBasedOnChanges> 
+    private _aggressiveCacheChanges: Map<string, Lazy<EvictItemsFromCacheBasedOnChanges>> = new Map();
+    // TBD: private readonly ConcurrentDictionary<string, EvictItemsFromCacheBasedOnChanges>
     // _observeChangesAndEvictItemsFromCacheForDatabases = 
     // new ConcurrentDictionary<string, EvictItemsFromCacheBasedOnChanges>();
 
@@ -84,6 +85,7 @@ export class DocumentStore extends DocumentStoreBase {
     public dispose(): void {
         this._log.info("Dispose.");
         this.emit("beforeDispose");
+
 
         /* TBD
             foreach (var value in _aggressiveCacheChanges.Values)
@@ -299,9 +301,9 @@ export class DocumentStore extends DocumentStoreBase {
     public disableAggressiveCaching(database?: string): IDisposable {
         this._assertInitialized();
         const re: RequestExecutor = this.getRequestExecutor(database || this.database);
-        const old = re.agressiveCaching;
-        re.agressiveCaching = null;
-        const dispose = () => re.agressiveCaching = old;
+        const old = re.aggressiveCaching;
+        re.aggressiveCaching = null;
+        const dispose = () => re.aggressiveCaching = old;
 
         return { dispose };
     }

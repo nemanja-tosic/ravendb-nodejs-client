@@ -57,52 +57,78 @@ export interface DocumentStoreEventEmitter {
     removeListener(eventName: "executorsDisposed", eventHandler: (callback: () => void) => void): void;
 }
 export interface IDocumentStore extends
-  IDisposable,
-  SessionEventsProxy,
-  DocumentStoreEventEmitter {
+    IDisposable,
+    SessionEventsProxy,
+    DocumentStoreEventEmitter {
 
-  /**
-   * 
-   * Opens document session 
-   * @param {string} [database] 
-   * @returns {IDocumentSession} 
-   * @memberof IDocumentStore
-   */
-  openSession(database?: string): IDocumentSession;
+    /**
+     *
+     * Opens document session
+     * @param {string} [database]
+     * @returns   {IDocumentSession}
+     * @memberof IDocumentStore
+     */
+    openSession(database?: string): IDocumentSession;
 
-  /**
-   * Opens document session 
-   * @param {ISessionOptions} [options] 
-   * @returns {IDocumentSession} 
-   * @memberof IDocumentStore
-   */
-  openSession(options?: ISessionOptions): IDocumentSession;
+    /**
+     * Opens document session
+     * @param {ISessionOptions} [options]
+     * @returns {IDocumentSession}
+     * @memberof IDocumentStore
+     */
+    openSession(options?: ISessionOptions): IDocumentSession;
 
-  /**
-   * Opens document session 
-   * @param {string} [database] 
-   * @param {ISessionOptions} [options] 
-   * @returns {IDocumentSession} 
-   * @memberof IDocumentStore
-   */
-  openSession(database?: string, options?: ISessionOptions): IDocumentSession;
+    /**
+     * Opens document session
+     * @param {string} [database]
+     * @param {ISessionOptions} [options]
+     * @returns {IDocumentSession}
+     * @memberof IDocumentStore
+     */
+    openSession(database?: string, options?: ISessionOptions): IDocumentSession;
 
     /**
      * Subscribe to change notifications from the server
      * @return Database changes object
      */
-  changes(): IDatabaseChanges;
-  changes(database: string): IDatabaseChanges;
+    changes(): IDatabaseChanges;
 
-    // TBD: IDisposable AggressivelyCacheFor(TimeSpan cacheDuration, string database = null);
-    // TBD IDisposable AggressivelyCache(string database = null);
+    /**
+     * Subscribe to change notifications from the server
+     * @param database Database name
+     * @return Database changes object
+     */
+    changes(database: string): IDatabaseChanges;
+
+    /**
+     * Setup the context for aggressive caching.
+     *
+     * Aggressive caching means that we will not check the server to see whether the response
+     * we provide is current or not, but will serve the information directly from the local cache
+     * without touching the server.
+     *
+     * @param cacheDuration Specify the aggressive cache duration
+     */
+    aggressivelyCacheFor(cacheDuration: number);
+
+    /**
+     * Setup the context for aggressive caching.
+     *
+     * Aggressive caching means that we will not check the server to see whether the response
+     * we provide is current or not, but will serve the information directly from the local cache
+     * without touching the server.
+     *
+     * @param cacheDuration Specify the aggressive cache duration
+     * @param database Database name
+     */
+    aggressivelyCacheFor(cacheDuration: number, database: string);
 
     /**
      * Setup the context for no aggressive caching
      *
-     * This is mainly useful for internal use inside RavenDB, when we are executing
-     * queries that have been marked with WaitForNonStaleResults, we temporarily disable
-     * aggressive caching.
+     * Aggressive caching means that we will not check the server to see whether the response
+     * we provide is current or not, but will serve the information directly from the local cache
+     * without touching the server.
      * @returns Disposable context
      */
     disableAggressiveCaching(): IDisposable;
@@ -110,9 +136,9 @@ export interface IDocumentStore extends
     /**
      * Setup the context for no aggressive caching
      *
-     * This is mainly useful for internal use inside RavenDB, when we are executing
-     * queries that have been marked with WaitForNonStaleResults, we temporarily disable
-     * aggressive caching.
+     * Aggressive caching means that we will not check the server to see whether the response
+     * we provide is current or not, but will serve the information directly from the local cache
+     * without touching the server.
      * @param database Database name
      * @returns Disposable context
      */
@@ -129,9 +155,14 @@ export interface IDocumentStore extends
     /**
      * Executes the index creation
      * @param task Index Creation task to use
-     * @param database Target database
      */
     executeIndex(task: AbstractIndexCreationTask): Promise<void>;
+
+    /**
+     * Executes the index creation
+     * @param task Index Creation task to use
+     * @param database Target database
+     */
     executeIndex(task: AbstractIndexCreationTask, database: string): Promise<void>;
 
     /**
@@ -142,6 +173,15 @@ export interface IDocumentStore extends
      * @memberof IDocumentStore
      */
     executeIndexes(tasks: AbstractIndexCreationTask[]): Promise<void>;
+
+    /**
+     * Executes the index creation
+     *
+     * @param {AbstractIndexCreationTask[]} tasks
+     * @param database Database name
+     * @returns {Promise<void>}
+     * @memberof IDocumentStore
+     */
     executeIndexes(tasks: AbstractIndexCreationTask[], database: string): Promise<void>;
 
     /**

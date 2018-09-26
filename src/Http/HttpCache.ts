@@ -10,6 +10,8 @@ export class HttpCache implements IDisposable {
     
     private _items: Cache;
 
+    public generation = 0;
+
     constructor(maxKeysSize: number = 500) {
         this._items = new Cache({
             limit: maxKeysSize
@@ -26,6 +28,7 @@ export class HttpCache implements IDisposable {
         httpCacheItem.changeVector = changeVector;
         httpCacheItem.payload = result;
         httpCacheItem.cache = this;
+        httpCacheItem.generation = this.generation;
 
         this._items.set(url, httpCacheItem);
     } 
@@ -59,6 +62,7 @@ export class HttpCache implements IDisposable {
         const httpCacheItem = new HttpCacheItem();
         httpCacheItem.changeVector = "404 response";
         httpCacheItem.cache = this;
+        httpCacheItem.generation = this.generation;
 
         this._items.set(url, httpCacheItem);
     }
@@ -67,10 +71,6 @@ export class HttpCache implements IDisposable {
         return this._items["_get_buckets"]().reduce((result, next: Map<string, string>) => {
             return result + next.size;
         }, 0);
-    }
-
-    public getMightHaveBeenModified(): boolean {
-        return false; // TBD
     }
 }
 
@@ -97,7 +97,7 @@ export class ReleaseCacheItem {
     }
 
     public get mightHaveBeenModified() {
-        return false; // TBD
+        return this.item.generation !== this.item.cache.generation;
     }
 }
 
@@ -105,6 +105,7 @@ export class HttpCacheItem {
     public changeVector: string;
     public payload: string;
     public lastServerUpdate: Date;
+    public generation: number;
 
     public cache: HttpCache;
 

@@ -50,8 +50,6 @@ export class EntityToJson {
 
         EntityToJson._tryRemoveIdentityProperty(jsonNode, type, conventions);
 
-        // TBD: TrySimplifyJson(reader);
-
         return jsonNode;
     }
 
@@ -70,7 +68,6 @@ export class EntityToJson {
         EntityToJson._writeMetadata(jsonNode, typeInfo, documentInfo);
 
         EntityToJson._tryRemoveIdentityProperty(jsonNode, typeInfo.typeName, conventions);
-        //TBD: TrySimplifyJson(reader);
 
         return jsonNode;
     }
