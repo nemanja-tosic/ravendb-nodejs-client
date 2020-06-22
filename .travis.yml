@@ -7,7 +7,7 @@ env:
   global:
     - RAVENDB_TEST_SERVER_PATH=./RavenDB/Server/Raven.Server
       RAVENDB_TEST_SERVER_CERTIFICATE_PATH=./certs/server.pfx
-      RAVENDB_TEST_CLIENT_CERT_PASSPHRASE=client11
+      RAVENDB_TEST_CLIENT_CERT_PASSPHRASE=client12
       RAVENDB_TEST_CLIENT_CERT_PATH=./certs/nodejs.pem
       RAVENDB_TEST_CA_PATH=/usr/local/share/ca-certificates/ca.crt
       RAVENDB_TEST_HTTPS_SERVER_URL=https://localhost:8989
