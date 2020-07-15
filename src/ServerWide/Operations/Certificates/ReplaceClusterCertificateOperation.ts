@@ -4,6 +4,8 @@ import { IServerOperation, OperationResultType } from "../../../Documents/Operat
 import { DocumentConventions } from "../../../Documents/Conventions/DocumentConventions";
 import { RavenCommand } from "../../../Http/RavenCommand";
 import { ServerNode } from "../../../Http/ServerNode";
+import { IRaftCommand } from "../../../Http/IRaftCommand";
+import { RaftIdGenerator } from "../../../Utility/RaftIdGenerator";
 
 export class ReplaceClusterCertificateOperation implements IServerOperation<void> {
     private readonly _certBytes: Buffer;
@@ -27,7 +29,7 @@ export class ReplaceClusterCertificateOperation implements IServerOperation<void
     }
 }
 
-class ReplaceClusterCertificateCommand extends RavenCommand<void> {
+class ReplaceClusterCertificateCommand extends RavenCommand<void> implements IRaftCommand {
     private readonly _certBytes: Buffer;
     private readonly _replaceImmediately: boolean;
 
@@ -58,5 +60,9 @@ class ReplaceClusterCertificateCommand extends RavenCommand<void> {
             headers: this._headers().typeAppJson().build(),
             body
         }
+    }
+
+    public getRaftUniqueRequestId(): string {
+        return RaftIdGenerator.newId();
     }
 }

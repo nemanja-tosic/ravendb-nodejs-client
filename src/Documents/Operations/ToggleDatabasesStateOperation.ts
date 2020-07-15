@@ -7,6 +7,8 @@ import * as stream from "stream";
 import { DocumentConventions } from "../Conventions/DocumentConventions";
 import { RavenCommand } from "../../Http/RavenCommand";
 import { ServerNode } from "../../Http/ServerNode";
+import { IRaftCommand } from "../../Http/IRaftCommand";
+import { RaftIdGenerator } from "../../Utility/RaftIdGenerator";
 
 export class ToggleDatabasesStateOperation implements IServerOperation<DisableDatabaseToggleResult> {
     private readonly _disable: boolean;
@@ -50,7 +52,7 @@ export class ToggleDatabasesStateOperation implements IServerOperation<DisableDa
     }
 }
 
-class ToggleDatabaseStateCommand extends RavenCommand<DisableDatabaseToggleResult> {
+class ToggleDatabaseStateCommand extends RavenCommand<DisableDatabaseToggleResult> implements IRaftCommand {
     private readonly _disable: boolean;
     private readonly _parameters: ToggleDatabasesStateParameters;
 
@@ -105,6 +107,10 @@ class ToggleDatabaseStateCommand extends RavenCommand<DisableDatabaseToggleResul
             });
 
         return body;
+    }
+
+    public getRaftUniqueRequestId(): string {
+        return RaftIdGenerator.newId();
     }
 }
 
