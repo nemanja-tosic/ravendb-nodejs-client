@@ -28,6 +28,7 @@ import * as Asm from "stream-json/Assembler";
 import { DocumentConventions } from "../Documents/Conventions/DocumentConventions";
 import { ErrorFirstCallback } from "../Types/Callbacks";
 import { StringBuilder } from "../Utility/StringBuilder";
+import {StreamingJsonParser} from "../../test/Mapping/StreamingParser";
 
 export interface RavenCommandResponsePipelineOptions<TResult> {
     collectBody?: boolean | ((body: string) => void);
@@ -35,6 +36,8 @@ export interface RavenCommandResponsePipelineOptions<TResult> {
         filters: any[]
     };
     jsonSync?: boolean;
+    streamResponse?: boolean;
+    streamResultsAsObjects?: boolean;
     streamKeyCaseTransform?: ObjectKeyCaseTransformStreamOptions;
     collectResult: CollectResultStreamOptions<TResult>;
     transform?: stream.Stream;
@@ -62,6 +65,11 @@ export class RavenCommandResponsePipeline<TStreamResult> extends EventEmitter {
 
     public parseJsonSync() {
         this._opts.jsonSync = true;
+        return this;
+    }
+
+    public parseSteaming() {
+        this._opts.streamResultsAsObjects = true;
         return this;
     }
 
@@ -189,6 +197,9 @@ export class RavenCommandResponsePipeline<TStreamResult> extends EventEmitter {
                 }
             });
             streams.push(parseJsonSyncTransform);
+        } else if (opts.streamResultsAsObjects) {
+            const resultsStreamer = new StreamingJsonParser([true, "Results", true]);
+            streams.push(resultsStreamer);
         }
 
         if (opts.streamKeyCaseTransform) {
