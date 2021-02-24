@@ -239,6 +239,39 @@ export class QueryCommand extends RavenCommand<QueryResult> {
             compareExchangeValueIncludes: QueryCommand._mapCompareExchangeToLocalObject(json.CompareExchangeValueIncludes),
             timeSeriesFields: json.TimeSeriesFields,
             timings: QueryCommand._mapTimingsToLocalObject(json.Timings)
+            /* TODO
+        // len === 2 is array index
+        if (stack[0] === "Results" || stack[0] === "Includes") {
+            if (len === 3) {
+                // top document level
+                return key === "@metadata" ? null : entityCasingConvention;
+            }
+            if (len === 4) {
+                if (stack[2] === "@metadata") {
+                    // handle @metadata object keys
+                    if (key[0] === "@" || key === "Raven-Node-Type") {
+                        return null;
+                    }
+                }
+            }
+            if (len === 5) {
+                // do not touch @nested-object-types keys
+                if (stack[len - 2] === "@nested-object-types") {
+                    return null;
+                }
+            }
+            if (len === 6) {
+                // @metadata.@attachments.[].name
+                if (stack[2] === "@metadata") {
+                    if (stack[3] === "@attachments") {
+                        return "camel";
+                    }
+
+                    return null;
+                }
+            }
+        }
+             */
         }
 
         return Object.assign(new QueryResult(), props);

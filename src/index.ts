@@ -656,5 +656,13 @@ export { Json };
 export { TransformKeysJsonStream } from "./Mapping/Json/Streams/TransformKeysJsonStream";
 
 import { DocumentStore } from "./Documents/DocumentStore";
+import {testPerf} from "./load";
 
 export default DocumentStore;
+
+/*
+testPerf()
+    .then(() => {
+        console.log("Done");
+    })
+*/
