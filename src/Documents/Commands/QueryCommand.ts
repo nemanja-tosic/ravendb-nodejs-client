@@ -9,6 +9,17 @@ import { JsonSerializer } from "../../Mapping/Json/Serializer";
 import * as stream from "readable-stream";
 import { RavenCommandResponsePipeline } from "../../Http/RavenCommandResponsePipeline";
 import { StringBuilder } from "../../Utility/StringBuilder";
+import { ServerCasing, ServerResponse } from "../../Types";
+import { finishedAsync, readToEnd } from "../../Utility/StreamUtil";
+import { User } from "../../../test/Assets/Entities";
+import { Order } from "../../../test/Assets/Orders";
+import { QueryTimings } from "../Queries/Timings/QueryTimings";
+import { StringUtil } from "../../Utility/StringUtil";
+import { CounterDetail } from "../Operations/Counters/CounterDetail";
+import { ICompareExchangeValue } from "../Operations/CompareExchange/ICompareExchangeValue";
+import { CompareExchangeResultItem } from "../Operations/CompareExchange/CompareExchangeValueResultParser";
+import { TimeSeriesRangeResult } from "../Operations/TimeSeries/TimeSeriesRangeResult";
+import { TimeSeriesEntry } from "../Session/TimeSeries/TimeSeriesEntry";
 
 export interface QueryCommandOptions {
     metadataOnly?: boolean;
@@ -102,19 +113,11 @@ export class QueryCommand extends RavenCommand<QueryResult> {
         fromCache: boolean,
         bodyCallback?: (body: string) => void): Promise<QueryResult> {
 
-        const rawResult = await RavenCommandResponsePipeline.create<QueryResult>()
-            .collectBody(bodyCallback)
-            .parseJsonAsync()
-            .jsonKeysTransform("DocumentQuery", conventions)
-            .process(bodyStream);
-        const queryResult = conventions.objectMapper
-            .fromObjectLiteral<QueryResult>(rawResult, {
-                typeName: QueryResult.name,
-                nestedTypes: {
-                    indexTimestamp: "date",
-                    lastQueryTime: "date"
-                }
-            }, new Map([[QueryResult.name, QueryResult]]));
+        const body = await readToEnd(bodyStream);
+        bodyCallback?.(body);
+
+        const json = JSON.parse(body); //TODO: parse sync or async
+        const queryResult = QueryCommand._mapToLocalObject(json, conventions);
 
         if (fromCache) {
             queryResult.durationInMs = -1;
@@ -126,5 +129,118 @@ export class QueryCommand extends RavenCommand<QueryResult> {
         }
 
         return queryResult;
+    }
+
+    private static _mapCompareExchangeToLocalObject(json: Record<string, ServerCasing<CompareExchangeResultItem>>): Record<string, CompareExchangeResultItem> {
+        if (!json) {
+            return undefined;
+        }
+
+        const result: Record<string, CompareExchangeResultItem> = {};
+
+        for (const [key, value] of Object.entries(json)) {
+            result[key] = {
+                index: value.Index,
+                key: value.Key,
+                value: {
+                    object: value.Value?.Object
+                }
+            }
+        }
+
+        return result;
+    }
+
+    private static _mapTimingsToLocalObject(timings: ServerCasing<QueryTimings>) {
+        if (!timings) {
+            return undefined;
+        }
+
+        const mapped = new QueryTimings();
+        mapped.durationInMs = timings.DurationInMs;
+        mapped.timings = timings.Timings ? {} : undefined;
+        if (timings.Timings) {
+            Object.keys(timings.Timings).forEach(time => {
+                mapped.timings[StringUtil.uncapitalize(time)] = QueryCommand._mapTimingsToLocalObject(timings.Timings[time]);
+            });
+        }
+        return mapped;
+    }
+
+    private static _mapTimeSeriesIncludesToLocalObject(json: Record<string, Record<string, ServerCasing<ServerResponse<TimeSeriesRangeResult>>[]>>) {
+        if (!json) {
+            return undefined;
+        }
+
+        const result: Record<string, Record<string, ServerResponse<TimeSeriesRangeResult>[]>> = {};
+
+        for (const [docId, perDocumentTimeSeries] of Object.entries(json)) {
+            const perDocumentResult: Record<string, ServerResponse<TimeSeriesRangeResult>[]> = {};
+
+            for (const [tsName, tsData] of Object.entries(perDocumentTimeSeries)) {
+                perDocumentResult[tsName] = tsData.map(ts => {
+                    return {
+                        from: ts.From,
+                        to: ts.To,
+                        totalResults: ts.TotalResults,
+                        entries: ts.Entries.map(entry => ({
+                            timestamp: entry.Timestamp,
+                            isRollup: entry.IsRollup,
+                            tag: entry.Tag,
+                            values: entry.Values,
+                        } as ServerResponse<TimeSeriesEntry>))
+                    };
+                })
+            }
+
+            result[docId] = perDocumentResult;
+        }
+
+        return result;
+    }
+
+    private static _mapToLocalObject(json: ServerCasing<ServerResponse<QueryResult>>, conventions: DocumentConventions): QueryResult {
+        const remoteCounters = json.CounterIncludes as Record<string, ServerCasing<CounterDetail>[]>;
+        const counterIncludes: Record<string, CounterDetail[]> = remoteCounters ? {} : undefined;
+
+        if (remoteCounters) {
+            for (const [key, value] of Object.entries(remoteCounters)) {
+                counterIncludes[key] = value.map(c => {
+                    return c ? {
+                        changeVector: c.ChangeVector,
+                        counterName: c.CounterName,
+                        counterValues: c.CounterValues,
+                        documentId: c.DocumentId,
+                        etag: c.Etag,
+                        totalValue: c.TotalValue
+                    } : null;
+                });
+            }
+        }
+        const props: Omit<QueryResult, "scoreExplanations" | "cappedMaxResults" | "createSnapshot" | "resultSize"> = {
+            results: json.Results, //TODO:
+            includes: json.Includes, //TODO:
+            indexName: json.IndexName,
+            indexTimestamp: conventions.dateUtil.parse(json.IndexTimestamp),
+            includedPaths: json.IncludedPaths,
+            isStale: json.IsStale,
+            skippedResults: json.SkippedResults,
+            totalResults: json.TotalResults,
+            highlightings: json.Highlightings,
+            explanations: json.Explanations,
+            timingsInMs: json.TimingsInMs,
+            lastQueryTime: conventions.dateUtil.parse(json.LastQueryTime),
+            durationInMs: json.DurationInMs,
+            resultEtag: json.ResultEtag,
+            nodeTag: json.NodeTag,
+            counterIncludes: counterIncludes,
+            includedCounterNames: json.IncludedCounterNames,
+            timeSeriesIncludes: QueryCommand._mapTimeSeriesIncludesToLocalObject(json.TimeSeriesIncludes),
+            compareExchangeValueIncludes: QueryCommand._mapCompareExchangeToLocalObject(json.CompareExchangeValueIncludes),
+            timeSeriesFields: json.TimeSeriesFields,
+            timings: QueryCommand._mapTimingsToLocalObject(json.Timings)
+        }
+
+        return Object.assign(new QueryResult(), props);
     }
 }

@@ -150,7 +150,7 @@ export class RavenCommandResponsePipeline<TStreamResult> extends EventEmitter {
     }
 
     private _appendBody(s: Buffer | string): void {
-        this._body.append(s.toString());
+        this._body.append(s.toString()); //TODO: can we avoid doing that?
     }
 
     private _buildUp(src: stream.Stream) {
@@ -172,19 +172,19 @@ export class RavenCommandResponsePipeline<TStreamResult> extends EventEmitter {
                 streams.push(...opts.jsonAsync.filters);
             }
         } else if (opts.jsonSync) {
-            let json = "";
+            const jsonChunks = [];
             const parseJsonSyncTransform = new stream.Transform({
                 readableObjectMode: true,
                 transform(chunk, enc, callback) {
-                    json += chunk.toString("utf8");
+                    jsonChunks.push(chunk.toString("utf8"));
                     callback();
                 },
                 flush(callback) {
                     try {
-                        callback(null, JSON.parse(json));
+                        callback(null, JSON.parse(jsonChunks.join("")));
                     } catch (err) {
                         callback(
-                            getError("InvalidOperationException", `Error parsing response: '${json}'.`, err));
+                            getError("InvalidOperationException", `Error parsing response: '${jsonChunks.join("")}'.`, err));
                     }
                 }
             });
