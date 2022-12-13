@@ -40,6 +40,7 @@ jobs:
       run: wget -O RavenDB.tar.bz2 "https://hibernatingrhinos.com/downloads/RavenDB%20for%20Linux%20x64/latest?buildType=${{ env.RAVENDB_BUILD_TYPE }}&version=${{ matrix.serverVersion }}"
 
     - run: mkdir certs
+    - run: pwd
     - run: openssl genrsa -out certs/ca.key 2048
     - run: openssl req -new -x509 -key certs/ca.key -out certs/ca.crt -subj "/C=US/ST=Arizona/L=Nevada/O=RavenDB Test CA/OU=RavenDB test CA/CN=localhost/emailAddress=ravendbca@example.com"
     - run: openssl genrsa -out certs/localhost.key 2048
@@ -49,6 +50,7 @@ jobs:
     - run: openssl pkcs12 -passout pass:"" -export -out certs/server.pfx -inkey certs/localhost.key -in certs/localhost.crt
     - run: sudo cp certs/ca.crt /usr/local/share/ca-certificates/ca.crt
     - run: sudo update-ca-certificates
+    - run: ls -l certs/
 
     - name: Extract RavenDB Server
       run: tar xjf RavenDB.tar.bz2
@@ -61,14 +63,3 @@ jobs:
     - name: Check exports
       run: npm run check-exports
 
-    - name: Run Tests
-      run: npm run test
-
-    - name: Build
-      run: npm run build
-
-    - name: Check imports
-      run: node -e "require('./dist').DocumentStore"
-
-    - name: Check imports
-      run: npm run check-imports
