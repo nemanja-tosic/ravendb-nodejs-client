@@ -18,6 +18,7 @@ import { CasingConvention, ObjectUtil, ObjectChangeCaseOptions } from "../../Uti
 import { LoadBalanceBehavior } from "../../Http/LoadBalanceBehavior";
 import { BulkInsertConventions } from "./BulkInsertConventions";
 import { InMemoryDocumentSessionOperations } from "../Session/InMemoryDocumentSessionOperations";
+import type fetch from "node-fetch";
 
 export type IdConvention = (databaseName: string, entity: object) => Promise<string>;
 export type IValueForQueryConverter<T> =
@@ -93,6 +94,7 @@ export class DocumentConventions {
     private _remoteEntityFieldNameConvention: CasingConvention;
 
     private _objectMapper: TypesAwareObjectMapper;
+    private _customFetch: typeof fetch;
     private _dateUtil: DateUtil;
     private _syncJsonParseLimit: number;
 
@@ -109,7 +111,7 @@ export class DocumentConventions {
         this._readBalanceBehavior = "None";
         this._identityPartsSeparator = "/";
         this._identityProperty = CONSTANTS.Documents.Metadata.ID_PROPERTY;
-        
+
         this._findJsType = (id: string, doc: object) => {
             const metadata = doc[CONSTANTS.Documents.Metadata.KEY];
             if (metadata) {
@@ -249,9 +251,28 @@ export class DocumentConventions {
         this._objectMapper = value;
     }
 
+    public get customFetch(): typeof fetch {
+        return this._customFetch;
+    }
+
+    /**
+     * Allows to override default fetch method
+     *
+     * This method is useful to enable RavenDB node.js client
+     * on CloudFlare Workers
+     *
+     * You should pass object bound to worker with type: mtls_certificate
+     *
+     * @param customFetch
+     */
+    public set customFetch(customFetch: typeof fetch) {
+        this._assertNotFrozen();
+        this._customFetch = customFetch;
+    }
+
     /**
      * Sets json length limit for sync parsing. Beyond that size
-     * we fallback to async parsing
+     * we fall back to async parsing
      */
     public get syncJsonParseLimit(): number {
         return this._syncJsonParseLimit;
@@ -435,7 +456,7 @@ export class DocumentConventions {
     public set storeDatesWithTimezoneInfo(value) {
         this._assertNotFrozen();
         this._dateUtilOpts.withTimezone = true;
-    } 
+    }
 
     /**
      * If set to 'true' then it will throw an exception when any query is performed (in session)
