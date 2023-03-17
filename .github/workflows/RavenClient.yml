@@ -2,7 +2,7 @@ name: tests/node
 
 on:
   push:
-    branches: [ v5.2 ]
+    branches: [ v5.2, cloudflare2  ]
   pull_request:
     branches: [ v5.2 ]
   schedule:
