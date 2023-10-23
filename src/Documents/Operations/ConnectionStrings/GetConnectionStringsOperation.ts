@@ -16,6 +16,8 @@ export interface GetConnectionStringsResult {
     ravenConnectionStrings: Record<string, RavenConnectionString>;
     sqlConnectionStrings: Record<string, SqlConnectionString>;
     olapConnectionStrings: Record<string, OlapConnectionString>;
+    elasticSearchConnectionStrings: Record<string, ElasticSearchConnectionString>;
+    queueConnectionStrings: Record<string, QueueConnectionString>;
 }
 
 export class GetConnectionStringsOperation implements IMaintenanceOperation<GetConnectionStringsResult> {

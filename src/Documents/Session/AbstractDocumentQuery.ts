@@ -178,15 +178,15 @@ export abstract class AbstractDocumentQuery<T extends object, TSelf extends Abst
     private _parameterPrefix = "p";
 
     private _includesAlias: string;
-    
+
     protected _highlightingTokens: HighlightingToken[] = [];
-    
+
     protected _queryHighlightings: QueryHighlightings = new QueryHighlightings();
 
     protected _queryTimings: QueryTimings;
 
     protected _explanations: Explanations;
-    
+
     protected _explanationToken: ExplanationToken;
 
     public get isDistinct(): boolean {
@@ -1219,7 +1219,7 @@ export abstract class AbstractDocumentQuery<T extends object, TSelf extends Abst
     }
 
     /**
-     * Specifies a boost weight to the last where clause.
+     * Specifies a boost weight to the previous where clause.
      * The higher the boost factor, the more relevant the term will be.
      * <p>
      * boosting factor where 1.0 is default, less than 1.0 is lower weight, greater than 1.0 is higher weight
@@ -1282,7 +1282,7 @@ export abstract class AbstractDocumentQuery<T extends object, TSelf extends Abst
         }
 
         if ((whereToken as WhereToken).whereOperator !== "Equals" as WhereOperator) {
-            throwError("InvalidOperationException", 
+            throwError("InvalidOperationException",
                 "Fuzzy can only be used right after where clause with equals operator");
         }
 
@@ -1310,7 +1310,7 @@ export abstract class AbstractDocumentQuery<T extends object, TSelf extends Abst
         }
 
         if ((whereToken as WhereToken).whereOperator !== "Search" as WhereOperator) {
-            throwError("InvalidOperationException", 
+            throwError("InvalidOperationException",
                 "Proximity can only be used right after search clause");
         }
 
@@ -1658,7 +1658,7 @@ export abstract class AbstractDocumentQuery<T extends object, TSelf extends Abst
     private _updateStatsAndHighlightingsAndExplanations(queryResult: QueryResult): void {
         this._queryStats.updateQueryStats(queryResult);
         this._queryHighlightings.update(queryResult);
-        
+
         if (this._explanations) {
             this._explanations.update(queryResult);
         }
@@ -1833,12 +1833,12 @@ export abstract class AbstractDocumentQuery<T extends object, TSelf extends Abst
     }
 
     public _highlight(
-        parameters: HighlightingParameters, 
+        parameters: HighlightingParameters,
         highlightingsCallback: ValueCallback<Highlightings>): void {
         highlightingsCallback(this._queryHighlightings.add(parameters.fieldName));
         const optionsParameterName = parameters
             ? this._addQueryParameter(
-                extractHighlightingOptionsFromParameters(parameters)) 
+                extractHighlightingOptionsFromParameters(parameters))
             : null;
         const token = HighlightingToken.create(
             parameters.fieldName, parameters.fragmentLength, parameters.fragmentCount, optionsParameterName);
@@ -1873,9 +1873,9 @@ export abstract class AbstractDocumentQuery<T extends object, TSelf extends Abst
     }
 
     protected _spatialByShapeWkt(
-        fieldName: string, 
-        shapeWkt: string, 
-        relation: SpatialRelation, 
+        fieldName: string,
+        shapeWkt: string,
+        relation: SpatialRelation,
         units: SpatialUnits,
         distErrorPercent: number): void {
         fieldName = this._ensureValidFieldName(fieldName, false);
@@ -1914,7 +1914,7 @@ export abstract class AbstractDocumentQuery<T extends object, TSelf extends Abst
     public _spatial(dynamicField: DynamicSpatialField, criteria: SpatialCriteria): void;
     public _spatial(fieldName: string, criteria: SpatialCriteria): void;
     public _spatial(
-        fieldNameOrDynamicSpatialField: string | DynamicSpatialField, 
+        fieldNameOrDynamicSpatialField: string | DynamicSpatialField,
         criteria: SpatialCriteria): void {
 
         let tokens: QueryToken[];
@@ -2256,8 +2256,8 @@ export abstract class AbstractDocumentQuery<T extends object, TSelf extends Abst
            throwError("InvalidOperationException", "Duplicate IncludeExplanations method calls are forbidden.");
        }
 
-       const optionsParameterName = options 
-            ? this._addQueryParameter(options) 
+       const optionsParameterName = options
+            ? this._addQueryParameter(options)
             : null;
        this._explanationToken = ExplanationToken.create(optionsParameterName);
        this._explanations = new Explanations();

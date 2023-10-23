@@ -94,7 +94,8 @@ export class MultiTypeHiLoIdGenerator {
     public async generateNextIdFor(collectionName: string): Promise<number> {
         let value = this._idGeneratorsByTag[collectionName];
         if (value) {
-            return value.nextId();
+            const nextId = await value.nextId();
+            return nextId.id;
         }
 
         const acquiredSem = acquireSemaphore(this._sem);
@@ -103,7 +104,8 @@ export class MultiTypeHiLoIdGenerator {
 
             value = this._idGeneratorsByTag[collectionName];
             if (value) {
-                return value.nextId();
+                const nextId = await value.nextId();
+                return nextId.id;
             }
 
             value = this._createGeneratorFor(collectionName);
@@ -113,11 +115,13 @@ export class MultiTypeHiLoIdGenerator {
             acquiredSem.dispose();
         }
 
-        return value.nextId();
+        const nextId = await value.nextId();
+        return nextId.id;
+
     }
 
     protected _createGeneratorFor(tag: string): HiloIdGenerator {
-        return new HiloIdGenerator(tag, this._store, this._dbName, this._identityPartsSeparator);
+        return new DefaultHiLoIdGenerator(tag, this._store, this._dbName, this._identityPartsSeparator);
     }
 
     public async returnUnusedRange() {

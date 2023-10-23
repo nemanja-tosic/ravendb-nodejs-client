@@ -18,18 +18,20 @@ import { ServerCasing, ServerResponse } from "../../../Types";
 import { ConditionalGetResult } from "../ConditionalGetDocumentsCommand";
 import { ObjectUtil } from "../../../Utility/ObjectUtil";
 import { camelCase } from "change-case";
+import { SessionInfo } from "../../Session/IDocumentSession";
 
 export class MultiGetCommand extends RavenCommand<GetResponse[]> implements IDisposable {
     private readonly _requestExecutor: RequestExecutor;
     private _httpCache: HttpCache;
     private readonly _commands: GetRequest[];
+    private _sessionInfo: SessionInfo;
     private _conventions: DocumentConventions;
     private _baseUrl: string;
     private _cached: Cached;
 
     aggressivelyCached: boolean;
 
-    public constructor(requestExecutor: RequestExecutor, conventions: DocumentConventions, commands: GetRequest[]) {
+    public constructor(requestExecutor: RequestExecutor, conventions: DocumentConventions, commands: GetRequest[], sessionInfo?: SessionInfo) {
         super();
 
         this._requestExecutor = requestExecutor;
@@ -45,6 +47,7 @@ export class MultiGetCommand extends RavenCommand<GetResponse[]> implements IDis
 
         this._commands = commands;
         this._conventions = conventions;
+        this._sessionInfo = sessionInfo;
         this._responseType = "Raw";
     }
 
@@ -64,7 +67,7 @@ export class MultiGetCommand extends RavenCommand<GetResponse[]> implements IDis
             headers: this._headers().typeAppJson().build(),
         };
 
-        if (this._maybeReadAllFromCache(this._requestExecutor.aggressiveCaching)) {
+        if ((!this._sessionInfo || !this._sessionInfo.noCaching) && this._maybeReadAllFromCache(this._requestExecutor.aggressiveCaching)) {
             this.aggressivelyCached = true;
             return null; // aggressively cached
         }

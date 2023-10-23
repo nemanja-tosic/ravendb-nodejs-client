@@ -13,7 +13,7 @@ import { IndexDefinition } from "../Documents/Indexes/IndexDefinition";
 import { RevisionsConfiguration } from "../Documents/Operations/RevisionsConfiguration";
 import { ExternalReplication } from "../Documents/Replication/ExternalReplication";
 import {
-    OlapConnectionString,
+    OlapConnectionString, QueueConnectionString,
     RavenConnectionString,
     SqlConnectionString
 } from "../Documents/Operations/Etl/ConnectionString";
@@ -60,6 +60,7 @@ export interface DatabaseRecord {
     revisionsForConflicts?: RevisionsCollectionConfiguration;
     expiration?: ExpirationConfiguration;
     refresh?: RefreshConfiguration;
+    integrations?: IntegrationConfigurations;
     periodicBackups?: PeriodicBackupConfiguration[];
     externalReplications?: ExternalReplication[];
     sinkPullReplications?: PullReplicationAsSink[];
@@ -67,9 +68,13 @@ export interface DatabaseRecord {
     ravenConnectionStrings?: { [key: string]: RavenConnectionString };
     sqlConnectionStrings?: { [key: string]: SqlConnectionString };
     olapConnectionStrings?: { [key: string]: OlapConnectionString };
+    elasticSearchConnectionStrings?: { [key: string]: ElasticSearchConnectionString };
+    queueConnectionStrings?: { [key: string]: QueueConnectionString };
     ravenEtls?: RavenEtlConfiguration[];
     sqlEtls?: SqlEtlConfiguration[];
+    elasticSearchEtls?: ElasticSearchEtlConfiguration[];
     olapEtls?: OlapEtlConfiguration[];
+    queueEtls?: QueueEtlConfiguration[];
     client?: ClientConfiguration;
     studio?: StudioConfiguration;
     truncatedClusterTransactionIndex?: number;

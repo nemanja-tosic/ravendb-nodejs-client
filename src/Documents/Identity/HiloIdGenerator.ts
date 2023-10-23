@@ -1,14 +1,12 @@
-import * as semaphore from "semaphore";
-
 import { IDocumentStore } from "../../Documents/IDocumentStore";
 import { DateUtil } from "../../Utility/DateUtil";
-import { acquireSemaphore, SemaphoreAcquisitionContext } from "../../Utility/SemaphoreUtil";
 import { StringUtil } from "../../Utility/StringUtil";
 import { HiloReturnCommand } from "./Commands/HiloReturnCommand";
 import { NextHiloCommand, HiLoResult } from "./Commands/NextHiloCommand";
 import { HiloRangeValue } from "./HiloRangeValue";
 import { DocumentConventions } from "../Conventions/DocumentConventions";
 import { Lazy } from "../Lazy";
+import { NextId } from "./NextId";
 
 export class HiloIdGenerator {
     private _store: IDocumentStore;
@@ -20,6 +18,10 @@ export class HiloIdGenerator {
     private readonly _identityPartsSeparator: string;
     private _prefix?: string = null;
     private _lastBatchSize: number = 0;
+    /**
+     * @deprecated Will be removed in next major version of the product. Use field Range.ServerTag instead.
+     * @private
+     */
     private _serverTag: string = null;
 
     private _nextRangeTask: Lazy<void>;
@@ -40,11 +42,16 @@ export class HiloIdGenerator {
         return this._getDocumentIdFromId(nextId);
     }
 
+    /**
+     * @deprecated Will be removed in next major version of the product. Use the getDocumentIdFromId(NextId) overload.
+     * @param nextId next id
+     * @protected
+     */
     protected _getDocumentIdFromId(nextId: number) {
         return this._prefix + nextId + "-" + this._serverTag;
     }
 
-    public async nextId(): Promise<number> {
+    public async nextId(): Promise<NextId> {
         // eslint-disable-next-line no-constant-condition
         while (true) {
             const current = this._nextRangeTask;
@@ -54,7 +61,10 @@ export class HiloIdGenerator {
 
             const id = range.increment();
             if (id <= range.maxId) {
-                return id;
+                return {
+                    id,
+                    serverTag: range.serverTag
+                }
             }
 
             try {
@@ -98,13 +108,13 @@ export class HiloIdGenerator {
 
     protected async _getNextRange(): Promise<void> {
         const hiloCmd = new NextHiloCommand(
-            this._tag, 
-            this._lastBatchSize, 
-            this._lastRangeAt, 
-            this._identityPartsSeparator, 
+            this._tag,
+            this._lastBatchSize,
+            this._lastRangeAt,
+            this._identityPartsSeparator,
             this._range.maxId,
             this._store.conventions);
-        
+
         await this._store.getRequestExecutor(this._dbName).execute(hiloCmd);
 
         const result: HiLoResult = hiloCmd.result;

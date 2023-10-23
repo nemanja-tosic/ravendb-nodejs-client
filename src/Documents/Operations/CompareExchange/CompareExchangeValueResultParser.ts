@@ -81,7 +81,7 @@ export class CompareExchangeValueResultParser {
         const raw = item.value;
 
         if (TypeUtil.isNullOrUndefined(raw)) {
-            return new CompareExchangeValue(key, index, null);
+            return new CompareExchangeValue(key, index, null, cv, null);
         }
 
         let metadata: MetadataAsDictionary;
@@ -92,10 +92,10 @@ export class CompareExchangeValueResultParser {
 
         let rawValue = raw.object;
         if (clazz && TypeUtil.isPrimitiveType(clazz) || TypeUtil.isPrimitive(rawValue)) {
-            return new CompareExchangeValue(key, index, rawValue, metadata);
+            return new CompareExchangeValue(key, index, rawValue, cv, metadata);
         } else {
             if (!rawValue) {
-                return new CompareExchangeValue(key, index, null, metadata);
+                return new CompareExchangeValue(key, index, null, cv, metadata);
             } else {
                 const entityType = conventions.getJsTypeByDocumentType(clazz as EntityConstructor);
                 if (conventions.entityFieldNameConvention) {
@@ -107,7 +107,7 @@ export class CompareExchangeValueResultParser {
                         });
                 }
                 const entity = conventions.deserializeEntityFromJson(entityType, rawValue);
-                return new CompareExchangeValue(key, index, entity, metadata);
+                return new CompareExchangeValue(key, index, entity, cv, metadata);
             }
         }
     }

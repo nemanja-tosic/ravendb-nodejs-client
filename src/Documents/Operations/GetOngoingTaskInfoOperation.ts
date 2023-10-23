@@ -104,9 +104,12 @@ class GetOngoingTaskInfoCommand extends RavenCommand<OngoingTask> {
             case "Backup":
                 nestedTypes = {
                     lastFullBackup: "date",
+                    delayUntil: "date",
+                    originalBackupTime: "date",
                     lastIncrementalBackup: "date",
                     "onGoingBackup.startTime": "date",
-                    "nextBackup.dateTime": "date"
+                    "nextBackup.dateTime": "date",
+                    "nextBackup.originalBackupTime": "date",
                 }
                 break;
         }

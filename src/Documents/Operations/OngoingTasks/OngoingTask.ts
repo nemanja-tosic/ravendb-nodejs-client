@@ -6,6 +6,9 @@ import { BackupType } from "../Backups/Enums";
 import { RavenEtlConfiguration } from "../Etl/RavenEtlConfiguration";
 import { SqlEtlConfiguration } from "../Etl/Sql/SqlEtlConfiguration";
 import { RetentionPolicy } from "../Backups/RetentionPolicy";
+import { ElasticSearchEtlConfiguration } from "../Etl/ElasticSearch/ElasticSearchEtlConfiguration";
+import { OlapEtlConfiguration } from "../Etl/Olap/OlapEtlConfiguration";
+import { QueueEtlConfiguration } from "../Etl/Queue/QueueEtlConfiguration";
 
 export interface OngoingTask {
     taskId: number;
