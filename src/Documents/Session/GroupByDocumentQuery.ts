@@ -44,4 +44,20 @@ export class GroupByDocumentQuery<T extends object> implements IGroupByDocumentQ
         this._query._groupByCount(projectedName);
         return this._query;
     }
+
+    /** TODO
+     *    @Override
+     *     public IGroupByDocumentQuery<T> filter(Consumer<IFilterFactory<T>> builder) {
+     *         return filter(builder, Integer.MAX_VALUE);
+     *     }
+     *     @Override
+     *     public IGroupByDocumentQuery<T> filter(Consumer<IFilterFactory<T>> builder, int limit) {
+     *         try (CleanCloseable mode = _query.setFilterMode(true)) {
+     *             FilterFactory<T> f = new FilterFactory<>(_query, limit);
+     *             builder.accept(f);
+     *         }
+     *
+     *         return this;
+     *     }
+     */
 }

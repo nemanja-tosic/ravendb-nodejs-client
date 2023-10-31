@@ -514,6 +514,12 @@ export class BatchOperation {
         return jsonNode;
     }
 
+    /* TODO
+    +    private static void throwInvalidValue(String arg, String fieldName) {
++        throw new IllegalArgumentException("'" + arg + "' is not a valid value for field " + fieldName);
++    }
+     */
+
     private static _throwMissingField(type: CommandType, fieldName: string): void {
         throwError("InvalidOperationException", type + " response is invalid. Field '" + fieldName + "' is missing.");
     }

@@ -99,6 +99,17 @@ class GetOngoingTaskInfoCommand extends RavenCommand<OngoingTask> {
                     lastClientConnectionTime: "date"
                 }
                 break;
+                /* TODO
+                  case OLAP_ETL:
++                        result = mapper.readValue(response, OngoingTaskOlapEtlDetails.class);
++                        break;
++                    case ELASTIC_SEARCH_ETL:
++                        result = mapper.readValue(response, OngoingTaskElasticSearchEtlDetails.class);
++                        break;
++                    case QUEUE_ETL:
++                        result = mapper.readValue(response, OngoingTaskQueueEtlDetails.class);
++                        break;
+                 */
             case "PullReplicationAsSink":
                 break;
             case "Backup":

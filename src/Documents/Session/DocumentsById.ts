@@ -36,4 +36,28 @@ export class DocumentsById {
     public entries() {
         return this._inner.entries();
     }
+
+    /* TODO
+    public Map<String, EntityInfo> getTrackedEntities(InMemoryDocumentSessionOperations session) {
+        Map<String, EntityInfo> result = new TreeMap<>(String::compareToIgnoreCase);
+
+        for (Map.Entry<String, DocumentInfo> keyValue : _inner.entrySet()) {
+            EntityInfo entityInfo = new EntityInfo();
+            entityInfo.setId(keyValue.getKey());
+            entityInfo.setEntity(keyValue.getValue().getEntity());
+            entityInfo.setDeleted(session.isDeleted(keyValue.getKey()));
+            result.put(keyValue.getKey(), entityInfo);
+        }
+
+        return result;
+    }
+
+     */
+}
+
+
+export class EntityInfo {
+    id: string;
+    entity: object;
+    isDeleted: boolean;
 }

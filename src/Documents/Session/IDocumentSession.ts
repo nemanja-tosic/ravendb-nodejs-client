@@ -260,6 +260,18 @@ export interface IDocumentSession extends IDisposable {
     timeSeriesRollupFor<T extends object>(entity: object, policy: string, raw: string, clazz: ClassConstructor<T>): ISessionDocumentRollupTypedTimeSeries<T>;
     timeSeriesRollupFor<T extends object>(documentId: string, policy: string, clazz: ClassConstructor<T>): ISessionDocumentRollupTypedTimeSeries<T>;
     timeSeriesRollupFor<T extends object>(documentId: string, policy: string, raw: string, clazz: ClassConstructor<T>): ISessionDocumentRollupTypedTimeSeries<T>;
+
+    /* TODO
+    +    ISessionDocumentIncrementalTimeSeries incrementalTimeSeriesFor(String documentId, String name);
++    ISessionDocumentIncrementalTimeSeries incrementalTimeSeriesFor(Object entity, String name);
++
++    <T> ISessionDocumentTypedIncrementalTimeSeries<T> incrementalTimeSeriesFor(Class<T> clazz, Object entity);
++    <T> ISessionDocumentTypedIncrementalTimeSeries<T> incrementalTimeSeriesFor(Class<T> clazz, Object entity, String name);
++
++    <T> ISessionDocumentTypedIncrementalTimeSeries<T> incrementalTimeSeriesFor(Class<T> clazz, String documentId);
++    <T> ISessionDocumentTypedIncrementalTimeSeries<T> incrementalTimeSeriesFor(Class<T> clazz, String documentId, String name);
++
+     */
 }
 
 /**

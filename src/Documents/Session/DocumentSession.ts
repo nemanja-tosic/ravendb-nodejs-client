@@ -264,8 +264,28 @@ export class DocumentSession extends InMemoryDocumentSessionOperations
         });
 
         await this._requestExecutor.execute(command, this._sessionInfo);
-        this._refreshInternal(entity, command, documentInfo);
+        const commandResult = command.result.results[0];
+        this._refreshInternal(entity, commandResult, documentInfo);
     }
+
+    /*TODO
+    +    /**
++     * Refreshes the specified entities from Raven server.
++     * @param entities Collection of instances of an entity that will be refreshed
++     * @param <T> Type
++     *
++    @Override
++    public <T> void refresh(List<T> entities) {
++        Map<String, Pair<Object, DocumentInfo>> idsEntitiesPairs = buildEntityDocInfoByIdHolder(entities);
++
++        incrementRequestCount();
++
++        GetDocumentsCommand command = new GetDocumentsCommand(idsEntitiesPairs.keySet().toArray(new String[0]), null, false);
++        _requestExecutor.execute(command, getSessionInfo());
++
++        refreshEntities(command, idsEntitiesPairs);
+}
+     */
 
     /**
      * Check if document exists without loading it
@@ -1085,6 +1105,40 @@ export class DocumentSession extends InMemoryDocumentSessionOperations
         const tsName = TimeSeriesOperations.getTimeSeriesName(rawOrClass as ClassConstructor<T>, this.conventions);
         return new SessionDocumentRollupTypedTimeSeries(this, entityOrDocumentId, tsName + TIME_SERIES_ROLLUP_SEPARATOR + policy, rawOrClass as ClassConstructor<T>);
     }
+
+    /* TODO
+
++    public ISessionDocumentIncrementalTimeSeries incrementalTimeSeriesFor(String documentId, String name) {
++        validateIncrementalTimeSeriesName(name);
++
++        return new SessionDocumentTimeSeries(this, documentId, name);
++    }
++
++    public ISessionDocumentIncrementalTimeSeries incrementalTimeSeriesFor(Object entity, String name) {
++        validateIncrementalTimeSeriesName(name);
++
++        return new SessionDocumentTimeSeries(this, entity, name);
++    }
++
++    public <T> ISessionDocumentTypedIncrementalTimeSeries<T> incrementalTimeSeriesFor(Class<T> clazz, String documentId) {
++        return incrementalTimeSeriesFor(clazz, documentId, null);
++    }
++    public <T> ISessionDocumentTypedIncrementalTimeSeries<T> incrementalTimeSeriesFor(Class<T> clazz, String documentId, String name) {
++        String tsName = ObjectUtils.firstNonNull(name, TimeSeriesOperations.getTimeSeriesName(clazz, getConventions()));
++        validateIncrementalTimeSeriesName(tsName);
++        return new SessionDocumentTypedTimeSeries<T>(clazz, this, documentId, tsName);
++    }
++
++    public <T> ISessionDocumentTypedIncrementalTimeSeries<T> incrementalTimeSeriesFor(Class<T> clazz, Object entity) {
++        return incrementalTimeSeriesFor(clazz, entity, null);
++    }
++    public <T> ISessionDocumentTypedIncrementalTimeSeries<T> incrementalTimeSeriesFor(Class<T> clazz, Object entity, String name) {
++        String tsName = ObjectUtils.firstNonNull(name, TimeSeriesOperations.getTimeSeriesName(clazz, getConventions()));
++        validateIncrementalTimeSeriesName(tsName);
++        return new SessionDocumentTypedTimeSeries<>(clazz, this, entity, tsName);
++    }
++
+     */
 
     async conditionalLoad<T extends object>(id: string, changeVector: string, clazz: ClassConstructor<T>): Promise<ConditionalLoadResult<T>> {
         if (StringUtil.isNullOrEmpty(id)) {

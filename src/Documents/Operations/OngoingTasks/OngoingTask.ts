@@ -76,3 +76,17 @@ export interface OngoingTaskSubscription extends OngoingTask {
     disabled: boolean;
     lastClientConnectionTime: Date;
 }
+
+export interface OngoingTaskElasticSearchEtlDetails extends OngoingTask {
+    taskType: "ElasticSearchEtl",
+    configuration: ElasticSearchEtlConfiguration; //TODO: verify types
+}
+
+export interface OngoingTaskOlapEtlDetails extends OngoingTask {
+    taskType: "OlapEtl",
+    configuration: OlapEtlConfiguration; //TODO: verify types
+}
+
+export interface OngoingTaskQueueEtlDetails extends OngoingTask {
+    configuration: QueueEtlConfiguration;
+}

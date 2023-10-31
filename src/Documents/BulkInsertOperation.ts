@@ -56,8 +56,20 @@ export class BulkInsertOperation {
     private _requestBodyStream: stream.PassThrough;
     private _pipelineFinished: Promise<void>;
 
+    /* TODO
+     private CleanCloseable _unsubscribeChanges;
++    private final List<EventHandler<BulkInsertOnProgressEventArgs>> _onProgress = new ArrayList<>();
++    private boolean _onProgressInitialized = false;
++
++    private final Timer _timer;
++    private Date _lastWriteToStream;
++    private final Semaphore _streamLock;
++    private final Duration _heartbeatCheckInterval = Duration.ofSeconds(40);
+     */
+
     public constructor(database: string, store: IDocumentStore, options?: BulkInsertOptions) {
         this._conventions = store.conventions;
+        this._store = store;
         if (StringUtil.isNullOrEmpty(database)) {
             this._throwNoDatabase();
         }
@@ -76,7 +88,98 @@ export class BulkInsertOperation {
         this._bulkInsertAborted.catch(err => {
             // we're awaiting it elsewhere
         });
+
+        /* TODO
+         _streamLock = new Semaphore(1);
++        _lastWriteToStream = new Date();
++
++        TimerState timerState = new TimerState();
++        timerState.parent = new WeakReference<>(this);
++
++        _timer = new Timer(() -> this.handleHeartbeat(timerState), _heartbeatCheckInterval, _heartbeatCheckInterval, _executorService);
++        timerState.timer = _timer;
+         */
     }
+
+    /* TODO
+      private static class TimerState {
++        public WeakReference<BulkInsertOperation> parent;
++        public Timer timer;
++    }
++
++    private static void handleHeartbeat(TimerState timerState) {
++        BulkInsertOperation bulkInsert = timerState.parent.get();
++        if (bulkInsert == null) {
++            timerState.timer.close();
++            return;
++        }
++
++        bulkInsert.sendHeartBeat();
++    }
++
++    private void sendHeartBeat() {
++        if (new Date().getTime() - _lastWriteToStream.getTime() < _heartbeatCheckInterval.toMillis()) {
++            return;
++        }
++
++        try {
++            if (!_streamLock.tryAcquire(0, TimeUnit.SECONDS)) {
++                return; // if locked we are already writing
++            }
++        } catch (InterruptedException e) {
++            throw new IllegalStateException("Unable to acquire lock");
++        }
++
++        try {
++            executeBeforeStore();
++            endPreviousCommandIfNeeded();
++            if (!checkServerVersion(_requestExecutor.getLastServerVersion())) {
++                return;
++            }
++
++            if (!_first) {
++                writeComma();
++            }
++
++            _first = false;
++            _inProgressCommand = CommandType.NONE;
++            _currentWriter.write("{\"Type\":\"HeartBeat\"}");
++
++            flushIfNeeded();
++            _requestBodyStream.flush();
++        } catch (Exception e) {
++            throw new RuntimeException(e);
++        } finally {
++            _streamLock.release();
++        }
++    }
++
++    private static boolean checkServerVersion(String serverVersion) {
++        try {
++            if (serverVersion != null) {
++                String[] versionParsed = serverVersion.split("\\.");
++                int major = Integer.parseInt(versionParsed[0]);
++                int minor = versionParsed.length > 1 ? Integer.parseInt(versionParsed[1]) : 0;
++                int build = versionParsed.length > 2 ? Integer.parseInt(versionParsed[2]) : 0;
++                return major > 5 || (major == 5 && minor >= 4 && build >= 110);
++            }
++        } catch (NumberFormatException e) {
++            return false;
++        }
++
++        return false;
++    }
++
++
++    public void addOnProgress(EventHandler<BulkInsertOnProgressEventArgs> handler) {
++        this._onProgress.add(handler);
++        _onProgressInitialized = true;
++    }
++
++    public void removeOnProgress(EventHandler<BulkInsertOnProgressEventArgs> handler) {
++        this._onProgress.remove(handler);
+     }
+     */
 
     get useCompression(): boolean {
         return this._useCompression;
@@ -213,9 +316,15 @@ export class BulkInsertOperation {
         this._writeString(id);
         const jsonString = JsonSerializer.getDefault().serialize(json);
         this._currentWriter.push(`","Type":"PUT","Document":${jsonString}}`);
+
     }
 
     private _handleErrors(documentId: string, e: Error) {
+        /* TODO
+        if (e instanceof BulkInsertClientException) {
++            throw (BulkInsertClientException) e;
++        }
+         */
         const error = this._getExceptionFromOperation();
         if (error) {
             throw error;
@@ -382,6 +491,22 @@ export class BulkInsertOperation {
                 await this._checkIfBulkInsertWasAborted();
             }
 
+            /* TODO
+             if (_unsubscribeChanges != null) {
+                _unsubscribeChanges.close();
+            }
+             */
+
+            await Promise.race(
+                [
+                    this._bulkInsertExecuteTask || Promise.resolve(),
+                    this._bulkInsertAborted || Promise.resolve()
+                ]);
+        } finally {
+            if (this._timer) {
+                this._timer.dispose();
+            }
+        }
     }
 
     private readonly _conventions: DocumentConventions;
@@ -457,7 +582,12 @@ export class BulkInsertOperation {
             throwError("InvalidArgumentException", "Time series name cannot be null or empty");
         }
 
-        return new BulkInsertOperation._timeSeriesBulkInsertClass(this, id, name);
+        /* TODO
+         if (StringUtils.startsWithIgnoreCase(name, Constants.Headers.INCREMENTAL_TIME_SERIES_PREFIX) && !name.contains("@")) {
++            throw new IllegalArgumentException("Time Series name cannot start with " + Constants.Headers.INCREMENTAL_TIME_SERIES_PREFIX + " prefix");
++        }
+         */
+
     }
 
     static throwAlreadyRunningTimeSeries() {
@@ -835,6 +965,22 @@ export class BulkInsertCommand extends RavenCommand<void> {
     public async setResponseAsync(bodyStream: stream.Stream, fromCache: boolean): Promise<string> {
         return throwError("NotImplementedException", "Not implemented");
     }
+
+    /* TODO
+    +    private static class ReleaseStream implements CleanCloseable {
++        private final BulkInsertOperation _bulkInsertOperation;
++
++        public ReleaseStream(BulkInsertOperation bulkInsertOperation) {
++            _bulkInsertOperation = bulkInsertOperation;
++        }
++
++        @Override
++        public void close() {
++            _bulkInsertOperation._streamLock.release();
++            _bulkInsertOperation._concurrentCheck.compareAndSet(1, 0);
++        }
++    }
+     */
 
 }
 

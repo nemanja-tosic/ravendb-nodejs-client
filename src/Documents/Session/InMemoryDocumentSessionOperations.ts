@@ -1438,6 +1438,18 @@ export abstract class InMemoryDocumentSessionOperations
             this._knownMissingIds.delete(id);
         }
 
+        /* TODO
+          if (TransactionMode.CLUSTER_WIDE.equals(transactionMode)) {
++            if (changeVector == null) {
++                Reference<String> changeVectorRef = new Reference<>();
++                if (getClusterSession().tryGetMissingAtomicGuardFor(id, changeVectorRef)) {
++                    changeVector = changeVectorRef.value;
++                }
++            }
++        }
++
+         */
+
         const documentInfo = new DocumentInfo();
         documentInfo.id = id;
         documentInfo.metadata = metadata;
@@ -1923,9 +1935,72 @@ export abstract class InMemoryDocumentSessionOperations
         }
     }
 
+    /* TODO
+      protected <T> Map<String, Pair<Object, DocumentInfo>> buildEntityDocInfoByIdHolder(List<T> entities) {
++        Map<String, Pair<Object, DocumentInfo>> idsEntitiesPairs = new HashMap<>();
++
++        for (T entity : entities) {
++            DocumentInfo docInfo = documentsByEntity.get(entity);
++            if (docInfo == null) {
++                throwCouldNotRefreshDocument("Cannot refresh a transient instance.");
++            }
++            idsEntitiesPairs.put(docInfo.getId(), Pair.of(entity, docInfo));
++        }
++
++        return idsEntitiesPairs;
++    }
++
++    protected void refreshEntities(GetDocumentsCommand command, Map<String, Pair<Object, DocumentInfo>> idsEntitiesPairs) {
++        List<EntityInfoAndResult> list = new ArrayList<>();
++
++        boolean hasDeleted = false;
++        ArrayNode resultsCollection = command.getResult().getResults();
++
++        for (JsonNode result : resultsCollection) {
++            if (result == null || result.isNull()) {
++                hasDeleted = true;
++                break;
++            }
++
++            String id = result.get(Constants.Documents.Metadata.KEY).get(Constants.Documents.Metadata.ID).asText();
++            Pair<Object, DocumentInfo> tuple = idsEntitiesPairs.get(id);
++            if (tuple == null) {
++                throwCouldNotRefreshDocument("Could not refresh an entity, the server returned an invalid id: " + id + ". Should not happen!");
++            }
++            list.add(EntityInfoAndResult.create(tuple.getKey(), tuple.getValue(), (ObjectNode) result));
++        }
++
++        if (hasDeleted) {
++            throwCouldNotRefreshDocument("Some of the requested documents are no longer exists and were probably deleted!");
++        }
++
++        for (EntityInfoAndResult tuple : list) {
++            refreshInternal(tuple.entity, tuple.result, tuple.info);
++        }
++    }
++
++    private static class EntityInfoAndResult {
++        public Object entity;
++        public DocumentInfo info;
++        public ObjectNode result;
++
++        public static EntityInfoAndResult create(Object entity, DocumentInfo info, ObjectNode result) {
++            EntityInfoAndResult returnValue = new EntityInfoAndResult();
++            returnValue.entity = entity;
++            returnValue.info = info;
++            returnValue.result = result;
++            return returnValue;
++        }
++    }
++
++    protected static void throwCouldNotRefreshDocument(String msg) {
++        throw new IllegalStateException(msg);
++    }
+     */
+
     protected _refreshInternal<T extends object>(
-        entity: T, cmd: RavenCommand<GetDocumentsResult>, documentInfo: DocumentInfo): void {
-        const document = cmd.result.results[0];
+        entity: T, cmd: object, documentInfo: DocumentInfo): void {
+        const document = cmd;
         if (!document) {
             throwError("InvalidOperationException",
                 "Document '" + documentInfo.id + "' no longer exists and was probably deleted");
@@ -1954,7 +2029,30 @@ export abstract class InMemoryDocumentSessionOperations
         if (documentInfoById) {
             documentInfoById.entity = entity;
         }
+
+        this.onAfterConversionToEntityInvoke(documentInfo.id, documentInfo.document, documentInfo.entity);
     }
+
+
+    /* TODO
+     public Map<String, DocumentsById.EntityInfo> getTrackedEntities() {
+        Map<String, DocumentsById.EntityInfo> tracked = documentsById.getTrackedEntities(this);
+
+        for (String id : _knownMissingIds) {
+            if (tracked.containsKey(id)) {
+                continue;
+            }
+
+            DocumentsById.EntityInfo entityInfo = new DocumentsById.EntityInfo();
+            entityInfo.setId(id);
+            entityInfo.setDeleted(true);
+
+            tracked.put(id, entityInfo);
+        }
+
+        return tracked;
+    }
+     */
 
     /**
      * Gets a value indicating whether any of the entities tracked by the session has changes.
@@ -2125,6 +2223,32 @@ export abstract class InMemoryDocumentSessionOperations
     public set transactionMode(value) {
         this._transactionMode = value;
     }
+
+    /* TODO
+       public static void validateTimeSeriesName(String name) {
+        if (StringUtils.isEmpty(name)) {
+            throw new IllegalArgumentException("Time Series name must contain at least one character");
+        }
+
+        if (StringUtils.startsWithIgnoreCase(name, Constants.Headers.INCREMENTAL_TIME_SERIES_PREFIX) && !name.contains("@")) {
+            throw new IllegalArgumentException("Time Series name cannot start with " + Constants.Headers.INCREMENTAL_TIME_SERIES_PREFIX + " prefix");
+        }
+    }
+
+    public static void validateIncrementalTimeSeriesName(String name) {
+        if (StringUtils.isEmpty(name)) {
+            throw new IllegalArgumentException("Incremental Time Series name must contain at least one character");
+        }
+
+        if (!StringUtils.startsWithIgnoreCase(name, Constants.Headers.INCREMENTAL_TIME_SERIES_PREFIX)) {
+            throw new IllegalArgumentException("Time Series name must start with " + Constants.Headers.INCREMENTAL_TIME_SERIES_PREFIX + " prefix");
+        }
+
+        if (name.contains("@")) {
+            throw new IllegalArgumentException("Time Series from type Rollup cannot be Incremental");
+        }
+    }
+     */
 
     private static _throwNoDatabase(): never {
         return throwError(

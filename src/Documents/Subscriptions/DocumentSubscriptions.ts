@@ -415,6 +415,22 @@ export class DocumentSubscriptions implements IDisposable {
         this._subscriptions.forEach(((value, key) => key.dispose()));
     }
 
+    /* TODO
+
++    public <T> void dropSubscriptionWorker(SubscriptionWorker<T> worker) {
++        dropSubscriptionWorker(worker, null);
++    }
++
++    public <T> void dropSubscriptionWorker(SubscriptionWorker<T> worker, String database) {
++        database = ObjectUtils.firstNonNull(database,_store.getDatabase());
++
++        RequestExecutor requestExecutor = _store.getRequestExecutor(database);
++        DropSubscriptionConnectionCommand command = new DropSubscriptionConnectionCommand(worker.getSubscriptionName(), worker.getWorkerId());
++
++        requestExecutor.execute(command);
++    }
+     */
+
     /**
      * Force server to close all current client subscription connections to the server
      */

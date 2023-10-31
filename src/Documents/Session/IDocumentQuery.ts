@@ -127,6 +127,27 @@ export interface IDocumentQuery<T extends object>
 
     moreLikeThis(moreLikeThis: MoreLikeThisBase): IDocumentQuery<T>;
 
+    /* TODO
+      /**
++     * Filter allows querying on documents without the need for issuing indexes.
++     * It is meant for exploratory queries or post query filtering.
++     * Criteria are evaluated at query time so please use Filter wisely to avoid performance issues.
++     * @param builder Builder of a Filter query
++     * @return Document query
++     *
+    +    IDocumentQuery<T> filter(Consumer<IFilterFactory<T>> builder);
+    +
+    +    /**
+     +     * Filter allows querying on documents without the need for issuing indexes.
+     +     * It is meant for exploratory queries or post query filtering.
+     +     * Criteria are evaluated at query time so please use Filter wisely to avoid performance issues.
+     +     * @param builder Builder of a Filter query
+     +     * @param limit Limits the number of documents processed by Filter.
+     +     * @return Document query
+     +     *
+    +    IDocumentQuery<T> filter(Consumer<IFilterFactory<T>> builder, int limit);
+     */
+
     //TBD MoreLikeThis
 
     suggestUsing(suggestion: SuggestionBase): ISuggestionDocumentQuery<T>;

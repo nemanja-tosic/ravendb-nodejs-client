@@ -57,6 +57,9 @@ export class DocumentConventions {
     private _disableTopologyUpdates: boolean;
 
     private _disableAtomicDocumentWritesInClusterWideTransaction: boolean;
+
+    private _disableTcpCompression = true; //TODO:
+
     private _shouldIgnoreEntityChanges: (sessionOperations: InMemoryDocumentSessionOperations, entity: object, documentId: string) => boolean;
 
     private _transformClassCollectionNameToDocumentIdPrefix: (maybeClassCollectionName: string) => string;

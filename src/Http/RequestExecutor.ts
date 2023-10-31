@@ -593,6 +593,26 @@ export class RequestExecutor implements IDisposable {
         return Promise.resolve(result);
     }
 
+    protected _updateNodeSelector(topology: Topology, forceUpdate: boolean) {
+        /* TODO
+        if (_nodeSelector == null) {
++            _nodeSelector = new NodeSelector(topology, _executorService);
++
++            if (getConventions().getReadBalanceBehavior() == ReadBalanceBehavior.FASTEST_NODE) {
++                _nodeSelector.scheduleSpeedTest();
++            }
++        } else if (_nodeSelector.onUpdateTopology(topology, forceUpdate)) {
++            disposeAllFailedNodesTimers();
++
++            if (getConventions().getReadBalanceBehavior() == ReadBalanceBehavior.FASTEST_NODE) {
++                _nodeSelector.scheduleSpeedTest();
++            }
++        }
++
++        topologyEtag = _nodeSelector.getTopology().getEtag();
+         */
+    }
+
     protected _disposeAllFailedNodesTimers(): void {
         for (const item of this._failedNodesTimers) {
             item[1].dispose();
@@ -732,6 +752,54 @@ export class RequestExecutor implements IDisposable {
                 return null;
             });
     }
+
+    protected async _singleTopologyUpdateAsync(initialUrls: string[], applicationIdentifier: string): Promise<void> {
+        /* TODO
+        if (_disposed) {
++                return;
++            }
++
++            // fetch tag for each of the urls
++            Topology topology = new Topology();
++            topology.setNodes(new ArrayList<>());
++            topology.setEtag(topologyEtag);
++
++            for (String url : initialUrls) {
++                ServerNode serverNode = new ServerNode();
++                serverNode.setUrl(url);
++                serverNode.setDatabase(_databaseName);
++
++                try {
++                    GetNodeInfoCommand command = new GetNodeInfoCommand();
++                    execute(serverNode, null, command, false, null);
++
++                    serverNode.setClusterTag(command.getResult().getNodeTag());
++                    serverNode.setServerRole(command.getResult().getServerRole());
++                } catch (AuthorizationException e) {
++                    // auth exceptions will always happen, on all nodes
++                    // so errors immediately
++                    _lastKnownUrls = initialUrls;
++                    throw e;
++                } catch (DatabaseDoesNotExistException e) {
++                    // Will happen on all node in the cluster,
++                    // so errors immediately
++
++                    _lastKnownUrls = initialUrls;
++                    throw e;
++                } catch (Exception e) {
++                    serverNode.setClusterTag("!");
++
++                }
++
++                topology.getNodes().add(serverNode);
++
++                updateNodeSelector(topology, true);
++            }
++
++            _lastKnownUrls = initialUrls;
+         */
+    }
+
 
     protected async _firstTopologyUpdate(inputUrls: string[], applicationIdentifier?: string): Promise<void> {
         const initialUrls: string[] = RequestExecutor.validateUrls(inputUrls, this._authOptions);

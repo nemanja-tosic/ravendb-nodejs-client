@@ -60,4 +60,16 @@ export class SessionDocumentTypedTimeSeries<T extends object> extends SessionTim
             this._appendInternal(entryOrTimestamp, values, tag);
         }
     }
+
+    /* TODO
+    +    public void increment(Date timestamp, T entry) {
++        double[] values = TimeSeriesValuesHelper.getValues(_clazz, entry);
++        increment(timestamp, values);
++    }
++
++    public void increment(T entry) {
++        double[] values = TimeSeriesValuesHelper.getValues(_clazz, entry);
++        increment(values);
++    }
+     */
 }

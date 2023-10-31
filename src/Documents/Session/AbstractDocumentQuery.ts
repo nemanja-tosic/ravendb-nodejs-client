@@ -315,7 +315,22 @@ export abstract class AbstractDocumentQuery<T extends object, TSelf extends Abst
         this._isProjectInto = isProjectInto || false;
     }
 
+    /* TODO
+       private void assertMethodIsCurrentlySupported(String methodName) {
+        if (!isFilterActive()) {
+            return;
+        }
+
+        throw new InvalidQueryException(methodName + " is currently unsupported for 'filter'. If you want to use "
+                + methodName + " in where method you have to put it before 'filter'");
+    }
+     */
+
     private _getCurrentWhereTokens(): QueryToken[] {
+        if (this.isFilterActive()) {
+            return this._filterTokens;
+        }
+
         if (!this._isInMoreLikeThis) {
             return this._whereTokens;
         }
@@ -566,6 +581,29 @@ export abstract class AbstractDocumentQuery<T extends object, TSelf extends Abst
         const projections = [ TIME_SERIES.QUERY_FUNCTION ];
         return new QueryData(fields, projections);
     }
+
+    /* TODO
+      public void _addFilterLimit(int filterLimit) {
+        if (filterLimit <= 0) {
+            throw new IllegalArgumentException("filter_limit need to be positive and bigger than 0.");
+        }
+
+        if (filterLimit != Integer.MAX_VALUE) {
+            this.filterLimit = filterLimit;
+        }
+    }
+     */
+
+    /* TODO
+    +    private List<QueryToken> getCurrentOrderByTokens() {
++        return orderByTokens;
++    }
++
++    private List<QueryToken> getCurrentFilterTokens() {
++        return filterTokens;
++    }
++
+     */
 
     protected _updateFieldsToFetchToken(fieldsToFetch: FieldsToFetchToken): void {
         this.fieldsToFetchToken = fieldsToFetch;
@@ -1247,6 +1285,27 @@ export abstract class AbstractDocumentQuery<T extends object, TSelf extends Abst
         tokens.push(QueryOperatorToken.OR);
     }
 
+    /* TODO
+
++    protected CleanCloseable setFilterMode(boolean on) {
++        return new FilterModeScope(filterModeStack, on);
++    }
++
++    private static class FilterModeScope implements CleanCloseable {
++        private final Stack<Boolean> _modeStack;
++
++        public FilterModeScope(Stack<Boolean> modeStack, boolean on) {
++            _modeStack = modeStack;
++            _modeStack.add(on);
++        }
++
++        public void close() {
++            _modeStack.pop();
++        }
++    }
++
+     */
+
     /**
      * Specifies a boost weight to the previous where clause.
      * The higher the boost factor, the more relevant the term will be.
@@ -1543,6 +1602,14 @@ export abstract class AbstractDocumentQuery<T extends object, TSelf extends Abst
                 .append(", $")
                 .append(this._addQueryParameter(this._pageSize));
         }
+
+        /* TODO
+          if (!filterTokens.isEmpty() && filterLimit != null) {
+            queryText
+                    .append(" filter_limit $")
+                    .append(addQueryParameter(filterLimit));
+        }
+         */
     }
 
     private _buildInclude(queryText: StringBuilder): void {
@@ -1815,6 +1882,22 @@ export abstract class AbstractDocumentQuery<T extends object, TSelf extends Abst
             isFirst = false;
         }
     }
+
+    /* TODO
+    +    private void buildFilter(StringBuilder writer) {
++        if (filterTokens.isEmpty()) {
++            return;
++        }
++
++        writer
++                .append(" filter ");
++
++        for (int i = 0; i < filterTokens.size(); i++) {
++            DocumentQueryHelper.addSpaceIfNeeded(i > 0 ? filterTokens.get(i - 1) : null, filterTokens.get(i), writer);
++            filterTokens.get(i).writeTo(writer);
++        }
++    }
+     */
 
     private _buildOrderBy(writer: StringBuilder): void {
         if (!this._orderByTokens || !this._orderByTokens.length) {
@@ -2374,6 +2457,20 @@ export abstract class AbstractDocumentQuery<T extends object, TSelf extends Abst
         this._addFromAliasToTokens(fromAlias, tokens);
     }
 
+    /* TODO
+
+    public void addFromAliasToOrderByTokens(String fromAlias) {
+        List<QueryToken> tokens = getCurrentOrderByTokens();
+        addFromAliasToTokens(fromAlias, tokens);
+    }
+
+    public void addFromAliasToFilterTokens(String fromAlias) {
+        List<QueryToken> tokens = getCurrentFilterTokens();
+        addFromAliasToTokens(fromAlias, tokens);
+    }
+
+     */
+    private _addFromAliasToTokens(fromAlias: string, tokens: QueryToken[]): void {
         if (!fromAlias) {
             throwError("InvalidArgumentException", "Alias cannot be null or empty.");
         }

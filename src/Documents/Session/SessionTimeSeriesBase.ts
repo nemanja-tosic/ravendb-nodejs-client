@@ -18,6 +18,7 @@ import { GetMultipleTimeSeriesOperation } from "../Operations/TimeSeries/GetMult
 import { CONSTANTS } from "../../Constants";
 import { ITimeSeriesIncludeBuilder } from "./Loaders/ITimeSeriesIncludeBuilder";
 import { TimeSeriesDetails } from "../Operations/TimeSeries/TimeSeriesDetails";
+import { DateUtil } from "../../Utility/DateUtil";
 
 export class SessionTimeSeriesBase {
     protected docId: string;
@@ -101,11 +102,64 @@ export class SessionTimeSeriesBase {
             this.session.defer(new TimeSeriesBatchCommandData(this.docId, this.name, null, deletes));
         }
 
+
+        this._removeFromCacheIfNeeded(from, to);
     }
 
     public deleteAt(at: Date) {
         this.delete(at, at);
     }
+
+    /* TODO
+    +    private void removeFromCacheIfNeeded(Date from, Date to) {
++        Map<String, List<TimeSeriesRangeResult>> cache = session.getTimeSeriesByDocId().get(docId);
++        if (cache == null) {
++            return;
++        }
++
++        if (from == null && to == null) {
++            cache.remove(name);
++            return;
++        }
++
++        List<TimeSeriesRangeResult> ranges = cache.get(name);
++        if (ranges != null && !ranges.isEmpty()) {
++            ranges.removeIf(range -> compare(leftDate(range.getFrom()), leftDate(from)) <= 0 && compare(rightDate(range.getTo()), rightDate(to)) >= 0);
++        }
++    }
++
++    public void increment(Date timestamp, double[] values) {
++        DocumentInfo documentInfo = session.documentsById.getValue(docId);
++        if (documentInfo != null && session.deletedEntities.contains(documentInfo.getEntity())) {
++            throwDocumentAlreadyDeletedInSession(docId, name);
++        }
++
++        TimeSeriesOperation.IncrementOperation op = new TimeSeriesOperation.IncrementOperation();
++        op.setTimestamp(timestamp);
++        op.setValues(values);
++
++        ICommandData command = session.deferredCommandsMap.get(IdTypeAndName.create(docId, CommandType.TIME_SERIES_WITH_INCREMENTS, name));
++        if (command != null) {
++            IncrementalTimeSeriesBatchCommandData tsCmd = (IncrementalTimeSeriesBatchCommandData) command;
++            tsCmd.getTimeSeries().increment(op);
++        } else {
++            List<TimeSeriesOperation.IncrementOperation> list = new ArrayList<>();
++            list.add(op);
++            session.defer(new IncrementalTimeSeriesBatchCommandData(docId, name, list));
++        }
++    }
++
++    public void increment(double[] values) {
++        increment(new Date(), values);
++    }
++
++    public void increment(Date timestamp, double value) {
++        increment(timestamp, new double[] { value });
++    }
++
++    public void increment(double value) {
++        increment(new Date(), value);
+     */
 
     private static _throwDocumentAlreadyDeletedInSession(documentId: string, timeSeries: string) {
         throwError("InvalidOperationException", "Can't modify timeseries " + timeSeries
@@ -414,7 +468,13 @@ export class SessionTimeSeriesBase {
             // add current range from cache to the merged list.
             // in order to avoid duplication, skip first item in range if needed
 
-            const toAdd = ranges[i].entries.slice(mergedValues.length === 0 ? 0 : 1);
+            /* TODO
+             boolean shouldSkip = false;
++            if (!mergedValues.isEmpty()) {
++                shouldSkip = ranges.get(i).getEntries()[0].getTimestamp().equals(mergedValues.get(mergedValues.size() - 1).getTimestamp());
++            }
+             */
+            const toAdd = ranges[i].entries.slice(!shouldSkip ? 0 : 1);
             mergedValues.push(...toAdd);
         }
 

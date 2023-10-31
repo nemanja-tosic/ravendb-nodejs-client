@@ -573,6 +573,12 @@ export class DocumentQuery<T extends object>
                 queryData.isCustomFunction, sourceAliasReference);
         } else {
             newFieldsToFetch = null;
+            /* TODO
+             if (fieldsToFetchToken != null) {
++                queryData = new QueryData(fieldsToFetchToken.fieldsToFetch, fieldsToFetchToken.projections, fromToken.getAlias(), declareTokens, loadTokens, fieldsToFetchToken.customFunction);
++                queryData.setProjectionBehavior(projectionBehavior);
++            }
+             */
         }
 
         if (newFieldsToFetch) {
@@ -862,4 +868,21 @@ export class DocumentQuery<T extends object>
             return new SuggestionDocumentQuery<T>(this);
         }
     }
+
+    /* TODO
+       @Override
+    public IDocumentQuery<T> filter(Consumer<IFilterFactory<T>> builder) {
+        return filter(builder, Integer.MAX_VALUE);
+    }
+
+    @Override
+    public IDocumentQuery<T> filter(Consumer<IFilterFactory<T>> builder, int limit) {
+        try (CleanCloseable mode = setFilterMode(true)) {
+            FilterFactory<T> f = new FilterFactory<>(this, limit);
+            builder.accept(f);
+        }
+
+        return this;
+    }
+     */
 }

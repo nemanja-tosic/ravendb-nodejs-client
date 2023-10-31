@@ -150,6 +150,18 @@ export class NodeSelector {
             throwError("DatabaseDoesNotExistException", "There are no nodes in the topology at all.");
         }
 
+        /* TODO
+         AtomicInteger[] stateFailures = state.failures;
++        List<ServerNode> serverNodes = state.nodes;
++        int len = Math.min(serverNodes.size(), stateFailures.length);
++
++        for (int i = 0; i < len; i++) {
++            if (stateFailures[i].get() == 0) {
++                return new CurrentIndexAndNode(i, serverNodes.get(i));
++            }
++        }
+         */
+
         return state.getNodeWhenEveryoneMarkedAsFaulted();
     }
 

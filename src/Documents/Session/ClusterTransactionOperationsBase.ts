@@ -30,6 +30,20 @@ export abstract class ClusterTransactionOperationsBase {
     protected readonly _session: DocumentSession;
     private readonly _state = CaseInsensitiveKeysMap.create<CompareExchangeSessionValue>();
 
+    /* TODO
+    private Map<String, String> _missingDocumentsTooAtomicGuardIndex;
++
++    protected boolean tryGetMissingAtomicGuardFor(String docId, Reference<String> changeVector) {
++        if (_missingDocumentsTooAtomicGuardIndex == null) {
++            changeVector.value = null;
++            return false;
++        }
++
++        changeVector.value = _missingDocumentsTooAtomicGuardIndex.get(docId);
++        return changeVector.value != null;
++    }
+     */
+
     public get numberOfTrackedCompareExchangeValues() {
         return this._state.size;
     }
@@ -225,19 +239,39 @@ export abstract class ClusterTransactionOperationsBase {
         return value;
     }
 
-    public registerCompareExchangeValues(values: Record<string, CompareExchangeResultItem>) {
+    public registerCompareExchangeValues(values: Record<string, CompareExchangeResultItem>, includingMissingAtomicGuards: boolean) {
         if (this.session.noTracking) {
             return;
         }
 
         if (values) {
             for (const [key, value] of Object.entries(values)) {
-                this.registerCompareExchangeValue(CompareExchangeValueResultParser.getSingleValue(value, false, this.session.conventions, null));
+                const val = CompareExchangeValueResultParser.getSingleValue(value, false, this.session.conventions, null);
+
+
+                /* TODO
+                 if (includingMissingAtomicGuards
++                        && StringUtils.startsWithIgnoreCase(val.getKey(), Constants.CompareExchange.RVN_ATOMIC_PREFIX)
++                        && val.getChangeVector() != null) {
++                    if (_missingDocumentsTooAtomicGuardIndex == null) {
++                        _missingDocumentsTooAtomicGuardIndex = new HashMap<>();
++                    }
++
++                    _missingDocumentsTooAtomicGuardIndex.put(val.getKey().substring(Constants.CompareExchange.RVN_ATOMIC_PREFIX.length()), val.getChangeVector());
++                } else {
++                    registerCompareExchangeValue(val);
++                }
+                 */
             }
         }
     }
 
     public registerCompareExchangeValue(value: CompareExchangeValue<any>): CompareExchangeSessionValue {
+        /* TODO
+         if (StringUtils.startsWithIgnoreCase(value.getKey(), Constants.CompareExchange.RVN_ATOMIC_PREFIX)) {
++            throw new IllegalStateException("'" + value.getKey() + "' is an atomic guard and you cannot load it via the session");
++        }
+         */
         if (this.session.noTracking) {
             return new CompareExchangeSessionValue(value);
         }

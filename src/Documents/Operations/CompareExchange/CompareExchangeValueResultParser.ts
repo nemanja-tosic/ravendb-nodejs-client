@@ -80,6 +80,8 @@ export class CompareExchangeValueResultParser {
 
         const raw = item.value;
 
+        const cv = item.changeVector; //TODO: test me!
+
         if (TypeUtil.isNullOrUndefined(raw)) {
             return new CompareExchangeValue(key, index, null, cv, null);
         }

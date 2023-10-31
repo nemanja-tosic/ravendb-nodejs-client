@@ -55,6 +55,13 @@ export class ElasticSearchConnectionString extends ConnectionString {
 
     public type: ConnectionStringType = "ElasticSearch";
 }
+
+export class Authentication { //TODO: verify mapping!
+    public apiKey: ApiKeyAuthentication;
+    public basic: BasicAuthentication;
+    public certificate: CertificateAuthentication;
+}
+
 export interface ApiKeyAuthentication {
     apiKeyId: string;
     apiKey: string;
