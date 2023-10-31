@@ -1,5 +1,6 @@
 import { GroupByField } from "./GroupByField";
 import { IDocumentQuery } from "./IDocumentQuery";
+import { IFilterFactory } from "../Queries/IFilterFactory";
 
 export interface IGroupByDocumentQuery<T extends object> {
 

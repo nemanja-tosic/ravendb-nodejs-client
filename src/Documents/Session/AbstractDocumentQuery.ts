@@ -2370,13 +2370,19 @@ export abstract class AbstractDocumentQuery<T extends object, TSelf extends Abst
     }
 
     public addFromAliasToWhereTokens(fromAlias: string): void {
+        const tokens = this._getCurrentWhereTokens();
+        this._addFromAliasToTokens(fromAlias, tokens);
+    }
+
         if (!fromAlias) {
             throwError("InvalidArgumentException", "Alias cannot be null or empty.");
         }
 
-        const tokens = this._getCurrentWhereTokens();
         for (const token of tokens) {
             if (token instanceof WhereToken) {
+                token.addAlias(fromAlias);
+            }
+            if (token instanceof OrderByToken) {
                 token.addAlias(fromAlias);
             }
         }

@@ -1,3 +1,4 @@
+import { LicensedFeatures } from "./LicensedFeatures";
 
 
 export interface TcpNegotiationResponse {

@@ -303,15 +303,14 @@ export class SessionTimeSeriesBase {
 
         if (!this.session.noTracking) {
             const fromDates = details.values.get(this.name)
-                .map(x => x.from)
-                .filter(x => x);
+                .map(x => leftDate(x.from));
 
             if (fromDates.length) {
-                from = fromDates[0];
+                from = fromDates[0].date;
 
                 fromDates.forEach(d => {
-                    if (d.getTime() < from.getTime()) {
-                        from = d;
+                    if (DatesComparator.compare(d, leftDate(from)) < 0) {
+                        from = d.date;
                     }
                 });
             } else {
@@ -319,14 +318,13 @@ export class SessionTimeSeriesBase {
             }
 
             const toDates = details.values.get(this.name)
-                .map(x => x.to)
-                .filter(x => x);
+                .map(x => rightDate(x.to))
 
             if (toDates.length) {
-                to = toDates[0];
+                to = toDates[0].date;
                 toDates.forEach(d => {
-                    if (d.getTime() > to.getTime()) {
-                        to = d;
+                    if (DatesComparator.compare(d, rightDate(to)) > 0) {
+                        to = d.date;
                     }
                 })
             } else {

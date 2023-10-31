@@ -1,6 +1,7 @@
 import { AuthorizationInfo, OperationTypes } from "./TcpConnectionHeaderMessage";
 import { Socket } from "net";
 import { TcpNegotiationResponse } from "./TcpNegotiationResponse";
+import { LicensedFeatures } from "./LicensedFeatures";
 
 export interface TcpNegotiateParameters {
     operation: OperationTypes;

@@ -4,7 +4,7 @@ import {
     ConnectionStringType,
     SqlConnectionString,
     RavenConnectionString,
-    OlapConnectionString
+    OlapConnectionString, ElasticSearchConnectionString, QueueConnectionString
 } from "../Etl/ConnectionString";
 import { DocumentConventions } from "../../Conventions/DocumentConventions";
 import { OperationResultType, IMaintenanceOperation } from "../OperationAbstractions";

@@ -1916,6 +1916,7 @@ export abstract class InMemoryDocumentSessionOperations
             && command.type !== "AttachmentMOVE"
             && command.type !== "Counters"
             && command.type !== "TimeSeries"
+            && command.type !== "TimeSeriesWithIncrements"
             && command.type !== "TimeSeriesCopy") {
             this.deferredCommandsMap.set(
                 IdTypeAndName.keyFor(id, "ClientModifyDocumentCommand", null), command);

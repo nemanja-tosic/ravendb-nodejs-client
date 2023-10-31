@@ -13,6 +13,7 @@ import { IndexDefinition } from "../Documents/Indexes/IndexDefinition";
 import { RevisionsConfiguration } from "../Documents/Operations/RevisionsConfiguration";
 import { ExternalReplication } from "../Documents/Replication/ExternalReplication";
 import {
+    ElasticSearchConnectionString,
     OlapConnectionString, QueueConnectionString,
     RavenConnectionString,
     SqlConnectionString
@@ -26,6 +27,9 @@ import { RollingIndexDeployment } from "../Documents/Indexes/RollingIndexDeploym
 import { RollingIndex } from "../Documents/Indexes/RollingIndex";
 import { AnalyzerDefinition } from "../Documents/Indexes/Analysis/AnalyzerDefinition";
 import { OlapEtlConfiguration } from "../Documents/Operations/Etl/Olap/OlapEtlConfiguration";
+import { IntegrationConfigurations } from "./Operations/Integrations/PostgreSql/IntegrationConfigurations";
+import { ElasticSearchEtlConfiguration } from "../Documents/Operations/Etl/ElasticSearch/ElasticSearchEtlConfiguration";
+import { QueueEtlConfiguration } from "../Documents/Operations/Etl/Queue/QueueEtlConfiguration";
 
 export interface ScriptResolver {
     script: string;

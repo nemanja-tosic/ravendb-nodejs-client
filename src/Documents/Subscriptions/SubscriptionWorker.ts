@@ -34,6 +34,7 @@ import * as os from "os";
 import { DocumentConventions } from "../Conventions/DocumentConventions";
 import { ServerCasing, ServerResponse } from "../../Types";
 import { CONSTANTS } from "../../Constants";
+import { TcpNegotiationResponse } from "../../ServerWide/Tcp/TcpNegotiationResponse";
 
 type EventTypes = "afterAcknowledgment" | "onEstablishedSubscriptionConnection" | "connectionRetry" | "batch" | "error" | "end" | "unexpectedSubscriptionError";
 
@@ -290,7 +291,7 @@ export class SubscriptionWorker<T extends object> implements IDisposable {
     }
 
     // noinspection JSUnusedLocalSymbols
-    private async _readServerResponseAndGetVersion(url: string, socket: Socket): Promise<NegotiationResponse> {
+    private async _readServerResponseAndGetVersion(url: string, socket: Socket): Promise<TcpNegotiationResponse> {
         this._ensureParser(socket);
         const x: any = await this._readNextObject();
         switch (x.status) {
@@ -838,6 +839,7 @@ export class SubscriptionWorker<T extends object> implements IDisposable {
     public off(event: EventTypes,
                handler:
                   ((batchOrError: SubscriptionBatch<T>, callback: EmptyCallback) => void)
+                  | ((value: SubscriptionWorker<any>) => void)
                   | ((error: Error) => void)) {
         this._emitter.removeListener(event, handler);
         return this;
@@ -846,6 +848,7 @@ export class SubscriptionWorker<T extends object> implements IDisposable {
     public removeListener(event: "batch", handler: (value: SubscriptionBatch<T>, callback: EmptyCallback) => void);
     public removeListener(event: "error", handler: (error?: Error) => void);
     public removeListener(event: "unexpectedSubscriptionError", handler: (error?: Error) => void);
+    public removeListener(event: "onEstablishedSubscriptionConnection", handler: (value: SubscriptionWorker<any>) => void);
     public removeListener(event: "end", handler: (error?: Error) => void);
     public removeListener(
         event: "afterAcknowledgment", handler: (value: SubscriptionBatch<T>, callback: EmptyCallback) => void);
@@ -854,6 +857,7 @@ export class SubscriptionWorker<T extends object> implements IDisposable {
         event: EventTypes,
         handler:
             ((batchOrError: SubscriptionBatch<T>, callback: EmptyCallback) => void)
+            | ((value: SubscriptionWorker<any>) => void)
             | ((error: Error) => void)) {
         this.removeListener(event as any, handler as any);
         return this;

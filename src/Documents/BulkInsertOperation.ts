@@ -102,7 +102,7 @@ export class BulkInsertOperation {
     }
 
     private _throwNoDatabase(): void {
-        throwError("InvalidOperationException", "Cannot start bulk insert operation without specifying a name of a database to operate on."
+        throwError("BulkInsertInvalidOperationException", "Cannot start bulk insert operation without specifying a name of a database to operate on."
             + "Database name can be passed as an argument when bulk insert is being created or default database can be defined using 'DocumentStore.setDatabase' method.");
     }
 
@@ -154,6 +154,7 @@ export class BulkInsertOperation {
         let metadata = opts.metadata;
 
         const id = opts.getId ? await this._getId(entity) : opts.id;
+        this._lastWriteToStream = new Date();
         BulkInsertOperation._verifyValidId(id);
 
         if (!this._currentWriter) {
@@ -364,30 +365,27 @@ export class BulkInsertOperation {
     }
 
     public async finish(): Promise<void> {
-        this._endPreviousCommandIfNeeded();
+        try {
+            this._endPreviousCommandIfNeeded();
 
-        if (this._currentWriter) {
-            this._currentWriter.push("]");
-            this._currentWriter.push(null);
-        }
+            if (this._currentWriter) {
+                this._currentWriter.push("]");
+                this._currentWriter.push(null);
+            }
 
-        if (this._operationId === -1) {
-            // closing without calling a single store.
-            return;
-        }
+            if (this._operationId === -1) {
+                // closing without calling a single store.
+                return;
+            }
 
-        if (this._completedWithError || this._aborted) {
-            await this._checkIfBulkInsertWasAborted();
-        }
+            if (this._completedWithError || this._aborted) {
+                await this._checkIfBulkInsertWasAborted();
+            }
 
-        await Promise.race(
-            [
-                this._bulkInsertExecuteTask || Promise.resolve(),
-                this._bulkInsertAborted || Promise.resolve()
-            ]);
     }
 
     private readonly _conventions: DocumentConventions;
+    private readonly _store: IDocumentStore;
 
     private async _getId(entity: any) {
         let idRef: string;
@@ -430,9 +428,7 @@ export class BulkInsertOperation {
             tsName = TimeSeriesOperations.getTimeSeriesName(clazz, this._conventions);
         }
 
-        if (StringUtil.isNullOrEmpty(tsName)) {
-            throwError("InvalidArgumentException", "Time series name cannot be null or empty");
-        }
+        BulkInsertOperation._validateTimeSeriesName(tsName);
 
         return new BulkInsertOperation._typedTimeSeriesBulkInsertClass(this, clazz, id, tsName);
 
@@ -451,6 +447,12 @@ export class BulkInsertOperation {
             throwError("InvalidArgumentException", "Document id cannot be null or empty");
         }
 
+        BulkInsertOperation._validateTimeSeriesName(name);
+
+        return new BulkInsertOperation._timeSeriesBulkInsertClass(this, id, name);
+    }
+
+    private static _validateTimeSeriesName(name: string) {
         if (StringUtil.isNullOrEmpty(name)) {
             throwError("InvalidArgumentException", "Time series name cannot be null or empty");
         }
@@ -459,7 +461,7 @@ export class BulkInsertOperation {
     }
 
     static throwAlreadyRunningTimeSeries() {
-        throwError("InvalidOperationException", "There is an already running time series operation, did you forget to close it?");
+        throwError("BulkInsertInvalidOperationException", "There is an already running time series operation, did you forget to close it?");
     }
 
     private static readonly _countersBulkInsertClass = class CountersBulkInsert implements ICountersBulkInsert {

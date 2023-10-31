@@ -25,6 +25,7 @@ import { IGraphDocumentQuery } from "./IGraphDocumentQuery";
 import { JavaScriptMap } from "./JavaScriptMap";
 import { ClassConstructor } from "../../Types";
 import { ConditionalLoadResult } from "./ConditionalLoadResult";
+import { EntityInfo } from "./DocumentsById";
 
 export type StreamQueryStatisticsCallback = (stats: StreamQueryStatistics) => void;
 

@@ -259,4 +259,10 @@ export class NodeSelector {
         this._ensureFastestNodeTimerExists();
         this._switchToSpeedTestPhase();
     }
+
+    private _ensureFastestNodeTimerExists() {
+        if (!this._updateFastestNodeTimer) {
+            this._updateFastestNodeTimer = new Timer(async () => this._switchToSpeedTestPhase(), null, null);
+        }
+    }
 }

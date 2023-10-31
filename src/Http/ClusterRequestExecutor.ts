@@ -63,7 +63,7 @@ export class ClusterRequestExecutor extends RequestExecutor {
         executor._disableTopologyUpdates = true;
         executor._topologyHeaderName = HEADERS.CLUSTER_TOPOLOGY_ETAG;
 
-        executor._firstTopologyUpdate = executor.singleTopologyUpdateAsync(urls, null);
+        executor._firstTopologyUpdatePromiseInternal = executor._singleTopologyUpdateAsync(urls, null);
 
         return executor;
     }
@@ -127,7 +127,7 @@ export class ClusterRequestExecutor extends RequestExecutor {
 
                         const newTopology = new Topology(results.etag, nodes);
 
-                        updateNodeSelector(newTopology, parameters.forceUpdate);
+                        this._updateNodeSelector(newTopology, parameters.forceUpdate);
 
                         this._onTopologyUpdatedInvoke(newTopology);
                     })

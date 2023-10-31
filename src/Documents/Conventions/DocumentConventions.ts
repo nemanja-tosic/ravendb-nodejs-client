@@ -324,6 +324,10 @@ export class DocumentConventions {
         this._loadBalancerContextSeed = seed;
     }
 
+    public get isDisableTcpCompression() {
+        return this._disableTcpCompression;
+    }
+
     /**
      * We have to make this check so if admin activated this, but client code did not provide the selector,
      * it is still disabled. Relevant if we have multiple clients / versions at once.

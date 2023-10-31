@@ -181,7 +181,7 @@ export class RequestExecutor implements IDisposable {
 
     protected _disposed: boolean;
 
-    private _firstTopologyUpdatePromiseInternal;
+    protected _firstTopologyUpdatePromiseInternal;
 
     private _httpAgent: http.Agent;
 
@@ -220,6 +220,8 @@ export class RequestExecutor implements IDisposable {
     protected _disableTopologyUpdates: boolean;
 
     protected _disableClientConfigurationUpdates: boolean;
+
+    protected _topologyHeaderName: string = HEADERS.TOPOLOGY_ETAG;
 
     protected _lastServerVersion: string;
 
@@ -472,7 +474,7 @@ export class RequestExecutor implements IDisposable {
         executor._topologyEtag = RequestExecutor.INITIAL_TOPOLOGY_ETAG;
         executor._disableTopologyUpdates = true;
         executor._disableClientConfigurationUpdates = true;
-        executor._firstTopologyUpdate = executor.singleTopologyUpdateAsync(initialUrls, this.GLOBAL_APPLICATION_IDENTIFIER);
+        executor._firstTopologyUpdatePromiseInternal = executor._singleTopologyUpdateAsync(initialUrls, this.GLOBAL_APPLICATION_IDENTIFIER);
 
         return executor;
     }
@@ -737,7 +739,7 @@ export class RequestExecutor implements IDisposable {
         const topologyUpdateErrors: { url: string, error: Error | string }[] = [];
 
         const tryUpdateTopology = async (url: string, database: string): Promise<boolean> => {
-            const serverNode = new ServerNode({ url, database });
+            const serverNode = new ServerNode({ url, database, serverRole: "Member" });
             try {
                 const updateParameters = new UpdateTopologyParameters(serverNode);
                 updateParameters.timeoutInMs = TypeUtil.MAX_INT32;
@@ -1713,21 +1715,38 @@ export class RequestExecutor implements IDisposable {
     }
 
     private _checkNodeStatusCallback(nodeStatus: NodeStatus): Promise<void> {
-        const copy = this.getTopologyNodes();
+        // In some cases, race conditions may occur with a recently changed topology and a failed node.
+        // We still should check the node's health, and if healthy, remove its timer and restore its index.
 
-        if (nodeStatus.nodeIndex >= copy.length) {
-            return; // topology index changed / removed
+        let nodeIndex: number;
+        let serverNode: ServerNode;
+        let status: NodeStatus;
+
+        try {
+            const nodeIndexAndServerNode = this._nodeSelector.getRequestedNode(nodeStatus.node.clusterTag)
+            nodeIndex = nodeIndexAndServerNode.currentIndex;
+            serverNode = nodeIndexAndServerNode.currentNode;
+        } catch (e) {
+            // There are no nodes in the topology or could not find requested node. Nothing we can do here
+            if (e.name === "DatabaseDoesNotExistException" || e.name === "RequestedNodeUnavailableException") {
+                status = this._failedNodesTimers.get(nodeStatus.node);
+                if (status) {
+                    status.dispose();
+                }
+
+                return;
+            } else {
+                throw e;
+            }
         }
 
-        const serverNode = copy[nodeStatus.nodeIndex];
-        if (serverNode !== nodeStatus.node) {
-            return;  // topology changed, nothing to check
+        if (!serverNode) {
+            return;
         }
 
         return Promise.resolve()
             .then(() => {
-                let status: NodeStatus;
-                return Promise.resolve(this._performHealthCheck(serverNode, nodeStatus.nodeIndex))
+                return Promise.resolve(this._performHealthCheck(serverNode, nodeIndex))
                     .then(() => {
                             status = this._failedNodesTimers[nodeStatus.nodeIndex];
                             if (status) {
