@@ -250,7 +250,7 @@ export abstract class InMemoryDocumentSessionOperations
         }
 
         this._documentStore = documentStore;
-        this._requestExecutor = 
+        this._requestExecutor =
             options.requestExecutor || documentStore.getRequestExecutor(this._databaseName);
 
         this.noTracking = options.noTracking;
@@ -522,7 +522,7 @@ export abstract class InMemoryDocumentSessionOperations
         }
 
         // if noTracking is session-wide then we want to override the passed argument
-        noTracking = this.noTracking || noTracking;  
+        noTracking = this.noTracking || noTracking;
 
         if (!id) {
             return this._deserializeFromTransformer(entityType, null, document, false) as T;
@@ -543,6 +543,8 @@ export abstract class InMemoryDocumentSessionOperations
                 this.documentsByEntity.put(docInfo.entity, docInfo);
             }
 
+            this.onAfterConversionToEntityInvoke(id, docInfo.document, docInfo.entity);
+
             return docInfo.entity as T;
         }
 
@@ -558,6 +560,8 @@ export abstract class InMemoryDocumentSessionOperations
                 this.documentsById.add(docInfo);
                 this.documentsByEntity.put(docInfo.entity, docInfo);
             }
+
+            this.onAfterConversionToEntityInvoke(id, docInfo.document, docInfo.entity);
 
             return docInfo.entity as T;
         }
@@ -582,6 +586,8 @@ export abstract class InMemoryDocumentSessionOperations
             this._makeMetadataInstance(newDocumentInfo);
         }
 
+        this.onAfterConversionToEntityInvoke(id, document, entity);
+
         return entity as T;
     }
 
@@ -589,7 +595,7 @@ export abstract class InMemoryDocumentSessionOperations
         if (this.noTracking) {
             return;
         }
-        
+
         const existing = this.documentsById.getValue(info.id);
         if (existing) {
             if (existing.entity === info.entity) {
@@ -597,30 +603,32 @@ export abstract class InMemoryDocumentSessionOperations
             }
 
             throwError(
-                "InvalidOperationException", 
+                "InvalidOperationException",
                 "The document " + info.id + " is already in the session with a different entity instance.");
         }
-        
+
         const existingEntity = this.documentsByEntity.get(info.entity);
         if (existingEntity) {
             if (StringUtil.equalsIgnoreCase(existingEntity.id, info.id)) {
                 return;
             }
-            
+
             throwError(
-                "InvalidOperationException", 
-                "Attempted to load an entity with id " 
-                + info.id 
+                "InvalidOperationException",
+                "Attempted to load an entity with id "
+                + info.id
                 + ", but the entity instance already exists in the session with id: " + existing.id);
         }
-        
+
         this.documentsByEntity.put(info.entity, info);
         this.documentsById.add(info);
         this.includedDocumentsById.delete(info.id);
      }
 
     private _deserializeFromTransformer(clazz: ObjectTypeDescriptor, id: string, document: object, trackEntity: boolean): object {
-        return this.entityToJson.convertToEntity(clazz, id, document, trackEntity);
+        const entity = this.entityToJson.convertToEntity(clazz, id, document, trackEntity);
+        this.onAfterConversionToEntityInvoke(id, document, entity);
+        return entity;
     }
 
     public registerIncludes(includes: object): void {
@@ -749,16 +757,16 @@ export abstract class InMemoryDocumentSessionOperations
     }
 
     public registerCounters(
-        resultCounters: object, 
+        resultCounters: object,
         countersToInclude: { [key: string]: string[] }): void;
     public registerCounters(
-        resultCounters: object, 
-        ids: string[], 
-        countersToInclude: string[], 
+        resultCounters: object,
+        ids: string[],
+        countersToInclude: string[],
         gotAll: boolean): void;
     public registerCounters(
-        resultCounters: object, 
-        idsOrCountersToInclude: string[] | { [key: string]: string[] }, 
+        resultCounters: object,
+        idsOrCountersToInclude: string[] | { [key: string]: string[] },
         countersToInclude?: string[],
         gotAll?: boolean) {
             if (Array.isArray(idsOrCountersToInclude)) {
@@ -769,9 +777,9 @@ export abstract class InMemoryDocumentSessionOperations
         }
 
     private _registerCountersWithIdsList(
-        resultCounters: object, 
-        ids: string[], 
-        countersToInclude: string[], 
+        resultCounters: object,
+        ids: string[],
+        countersToInclude: string[],
         gotAll: boolean): void {
         if (this.noTracking) {
             return;
@@ -792,7 +800,7 @@ export abstract class InMemoryDocumentSessionOperations
     }
 
     private _registerCountersWithCountersToIncludeObj(
-        resultCounters: object, 
+        resultCounters: object,
         countersToInclude: { [key: string]: string[] }): void {
 
         if (this.noTracking) {
@@ -808,9 +816,9 @@ export abstract class InMemoryDocumentSessionOperations
         this._registerMissingCounters(countersToInclude);
     }
      private _registerCountersInternal(
-         resultCounters: object, 
-         countersToInclude: { [key: string]: string[] }, 
-         fromQueryResult: boolean, 
+         resultCounters: object,
+         countersToInclude: { [key: string]: string[] },
+         fromQueryResult: boolean,
          gotAll: boolean): void {
          for (const [field, value] of Object.entries(resultCounters)) {
              if (!value) {
@@ -824,7 +832,7 @@ export abstract class InMemoryDocumentSessionOperations
              }
 
              if (value.length === 0 && !gotAll) {
-                 const cache = this._countersByDocId.get(field);
+                 const cache = this.getCountersByDocId.get(field);
                  if (!cache) {
                      continue;
                  }
@@ -1346,7 +1354,7 @@ export abstract class InMemoryDocumentSessionOperations
         documentType: DocumentType): Promise<void> {
         if (this.noTracking) {
             throwError(
-                "InvalidOperationException", 
+                "InvalidOperationException",
                 "Cannot store entity. Entity tracking is disabled in this session.");
         }
 
@@ -1356,6 +1364,9 @@ export abstract class InMemoryDocumentSessionOperations
 
         const value = this.documentsByEntity.get(entity);
         if (value) {
+            if (!id && !StringUtil.equalsIgnoreCase(value.id, id)) {
+                throwError("InvalidOperationException", "Cannot store the same entity (id: " + value.id + ") with different id (" + id + ")");
+            }
             value.changeVector = changeVector || value.changeVector;
             value.concurrencyCheckMode = forceConcurrencyCheck;
             return;
@@ -1389,7 +1400,7 @@ export abstract class InMemoryDocumentSessionOperations
         this._assertNoNonUniqueInstance(entity, id);
 
         const conventions = this._requestExecutor.conventions;
-        
+
         const typeDesc = conventions.getJsTypeByDocumentType(documentType);
         const collectionName: string = documentType
             ? conventions.getCollectionNameForType(typeDesc)
@@ -1486,11 +1497,11 @@ export abstract class InMemoryDocumentSessionOperations
         if (this._transactionMode !== "ClusterWide") {
             return;
         }
-        
+
         if (this.useOptimisticConcurrency) {
             throwError(
-                "InvalidOperationException", 
-                "useOptimisticConcurrency is not supported with TransactionMode set to " 
+                "InvalidOperationException",
+                "useOptimisticConcurrency is not supported with TransactionMode set to "
                     + "ClusterWide" as TransactionMode);
         }
 
@@ -1500,8 +1511,8 @@ export abstract class InMemoryDocumentSessionOperations
                 case "DELETE":
                     if (commandData.changeVector) {
                         throwError(
-                            "InvalidOperationException", 
-                            "Optimistic concurrency for " 
+                            "InvalidOperationException",
+                            "Optimistic concurrency for "
                             + commandData.id + " is not supported when using a cluster transaction.");
                     }
                     break;
@@ -1566,7 +1577,7 @@ export abstract class InMemoryDocumentSessionOperations
 
         if (this._transactionMode !== "ClusterWide") {
             throwError(
-                "InvalidOperationException", 
+                "InvalidOperationException",
                 "Performing cluster transaction operation require the TransactionMode to be set to ClusterWide");
         }
 
@@ -1816,7 +1827,7 @@ export abstract class InMemoryDocumentSessionOperations
 
         this.deletedEntities.add(entity);
         this.includedDocumentsById.delete(value.id);
-        
+
         if (this._countersByDocId) {
             this._countersByDocId.delete(value.id);
         }
@@ -1858,7 +1869,7 @@ export abstract class InMemoryDocumentSessionOperations
 
         this._knownMissingIds.add(id);
         changeVector = this.useOptimisticConcurrency ? changeVector : null;
-        
+
         if (this._countersByDocId) {
             this._countersByDocId.delete(id);
         }
@@ -1892,7 +1903,7 @@ export abstract class InMemoryDocumentSessionOperations
 
         this._addCommand(command, command.id, command.type, command.name);
     }
-    
+
     private _addCommand(command: ICommandData, id: string, commandType: CommandType, commandName: string): void {
         this.deferredCommandsMap.set(
             IdTypeAndName.keyFor(id, commandType, commandName), command);

@@ -147,7 +147,12 @@ export type RavenErrorType = "RavenException"
     | "ReplicationHubNotFoundException"
     | "SubscriptionNameException"
     | "SorterDoesNotExistException"
-    | "LicenseActivationException";
+    | "LicenseActivationException"
+    | "NotSupportedInCoraxException"
+    | "NotImplementedInCoraxException"
+    | "CompareExchangeInvalidKeyException"
+    | "BulkInsertInvalidOperationException"
+    | "BulkInsertClientException";
 
 export interface ExceptionSchema {
     url: string;

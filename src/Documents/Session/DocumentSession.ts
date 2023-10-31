@@ -167,7 +167,7 @@ export class DocumentSession extends InMemoryDocumentSessionOperations
             if (TypeUtil.isFunction(options.includes)) {
                 const builder = new IncludeBuilder(this.conventions);
                 options.includes(builder);
-                
+
                 if (builder.countersToInclude) {
                     internalOpts.counterIncludes = [...builder.countersToInclude];
                 }
@@ -190,7 +190,7 @@ export class DocumentSession extends InMemoryDocumentSessionOperations
                 internalOpts.includeAllCounters = builder.isAllCounters;
             } else {
                 internalOpts.includes = options.includes as string[];
-            } 
+            }
         }
 
         return internalOpts;
@@ -198,7 +198,7 @@ export class DocumentSession extends InMemoryDocumentSessionOperations
 
     private async _loadInternal(
         ids: string[],
-        operation: LoadOperation, 
+        operation: LoadOperation,
         writable: stream.Writable): Promise<void>;
     private async _loadInternal(
         ids: string[],
@@ -253,7 +253,7 @@ export class DocumentSession extends InMemoryDocumentSessionOperations
     public async refresh<TEntity extends object>(entity: TEntity): Promise<void> {
         const documentInfo = this.documentsByEntity.get(entity);
         if (!documentInfo) {
-            throwError("InvalidOperationException", "Cannot refresh a transient instance");
+            this.throwCouldNotRefreshDocument("Cannot refresh a transient instance");
         }
 
         this.incrementRequestCount();
@@ -714,7 +714,7 @@ export class DocumentSession extends InMemoryDocumentSessionOperations
 
         if (!isIndex && !isCollection) {
             const entityType = this.conventions.getJsTypeByDocumentType(opts.documentType);
-            collection = this.conventions.getCollectionNameForType(entityType) 
+            collection = this.conventions.getCollectionNameForType(entityType)
                 || CONSTANTS.Documents.Metadata.ALL_DOCUMENTS_COLLECTION;
         }
 
@@ -995,12 +995,15 @@ export class DocumentSession extends InMemoryDocumentSessionOperations
             transform(chunk: object, encoding: string, callback: stream.TransformCallback) {
                 const doc = chunk["value"];
                 const metadata = doc[CONSTANTS.Documents.Metadata.KEY];
-                const changeVector = metadata[CONSTANTS.Documents.Metadata.CHANGE_VECTOR];
+                let changeVector: string = null;
                 // MapReduce indexes return reduce results that don't have @id property
                 const id = metadata[CONSTANTS.Documents.Metadata.ID] || null;
                 //TODO: pass timeseries fields!
                 const entity = QueryOperation.deserialize(
                     id, doc, metadata, fieldsToFetchToken || null, true, session, clazz, isProjectInto);
+                if (id) {
+                    changeVector = metadata[CONSTANTS.Documents.Metadata.CHANGE_VECTOR];
+                }
                 callback(null, {
                     changeVector,
                     metadata,
@@ -1037,6 +1040,9 @@ export class DocumentSession extends InMemoryDocumentSessionOperations
         return new SessionDocumentCounters(this, entityOrId as any);
     }
 
+    /**
+     * @deprecated Graph API will be removed in next major version of the product.
+     */
     public graphQuery<TEntity extends object>(
         query: string, documentType?: DocumentType<TEntity>): IGraphDocumentQuery<TEntity> {
         return new GraphDocumentQuery<TEntity>(this, query, documentType);
@@ -1052,6 +1058,7 @@ export class DocumentSession extends InMemoryDocumentSessionOperations
         if (clazz) {
             const name = nameOrClass as string;
             const tsName = name ?? TimeSeriesOperations.getTimeSeriesName(clazz, this.conventions);
+            this.validateTimeSeriesName(tsName);
             return new SessionDocumentTypedTimeSeries(this, entityOrDocumentId, tsName, clazz);
         }
 
@@ -1059,6 +1066,7 @@ export class DocumentSession extends InMemoryDocumentSessionOperations
             return new SessionDocumentTimeSeries(this, entityOrDocumentId, nameOrClass);
         } else {
             const tsName = TimeSeriesOperations.getTimeSeriesName(nameOrClass, this.conventions);
+            this.validateTimeSeriesName(tsName);
             return new SessionDocumentTypedTimeSeries(this, entityOrDocumentId, tsName, nameOrClass);
         }
     }

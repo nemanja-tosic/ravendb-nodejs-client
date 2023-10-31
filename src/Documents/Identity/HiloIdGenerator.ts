@@ -10,14 +10,14 @@ import { NextId } from "./NextId";
 
 export class HiloIdGenerator {
     private _store: IDocumentStore;
-    private readonly _dbName: string;
     private readonly _tag: string;
-    private _conventions: DocumentConventions;
-    private _lastRangeAt: Date;
-    private _range: HiloRangeValue;
-    private readonly _identityPartsSeparator: string;
-    private _prefix?: string = null;
+    protected _prefix?: string = null;
     private _lastBatchSize: number = 0;
+    private _lastRangeAt: Date;
+    private readonly _dbName: string;
+    private readonly _identityPartsSeparator: string;
+    private _range: HiloRangeValue;
+
     /**
      * @deprecated Will be removed in next major version of the product. Use field Range.ServerTag instead.
      * @private
@@ -27,19 +27,12 @@ export class HiloIdGenerator {
     private _nextRangeTask: Lazy<void>;
 
     constructor(tag: string, store: IDocumentStore, dbName: string, identityPartsSeparator: string) {
-        this._lastRangeAt = DateUtil.zeroDate();
-        this._range = new HiloRangeValue();
-        this._conventions = store.conventions;
-        this._tag = tag;
         this._store = store;
+        this._tag = tag;
         this._dbName = dbName;
         this._identityPartsSeparator = identityPartsSeparator;
-    }
-
-    // noinspection JSUnusedLocalSymbols
-    public async generateDocumentId(entity: object): Promise<string> {
-        const nextId = await this.nextId();
-        return this._getDocumentIdFromId(nextId);
+        this._lastRangeAt = DateUtil.zeroDate();
+        this._range = new HiloRangeValue(1, 0, null);
     }
 
     /**
@@ -51,7 +44,14 @@ export class HiloIdGenerator {
         return this._prefix + nextId + "-" + this._serverTag;
     }
 
-    public async nextId(): Promise<NextId> {
+    // noinspection JSUnusedLocalSymbols
+    public async generateDocumentId(entity: object): Promise<string> {
+        const nextId = await this.getNextId();
+        return this._getDocumentIdFromId(nextId.id);
+    }
+
+
+    public async getNextId(): Promise<NextId> {
         // eslint-disable-next-line no-constant-condition
         while (true) {
             const current = this._nextRangeTask;
@@ -99,11 +99,9 @@ export class HiloIdGenerator {
         }
     }
 
-    public returnUnusedRange(): Promise<void> {
-        const range = this._range;
-        const executor = this._store.getRequestExecutor(this._dbName);
-
-        return executor.execute(new HiloReturnCommand(this._tag, range.current, range.maxId));
+    public async nextId(): Promise<number> {
+        const result = await this.getNextId();
+        return result.id;
     }
 
     protected async _getNextRange(): Promise<void> {
@@ -123,18 +121,14 @@ export class HiloIdGenerator {
         this._serverTag = result.serverTag || null;
         this._lastRangeAt = result.lastRangeAt;
 
-        this._range = new HiloRangeValue(result.low, result.high);
+        this._range = new HiloRangeValue(result.low, result.high, result.serverTag);
     }
 
-    protected _assembleDocumentId(currentRangeValue: number): string {
-        const prefix: string = (this._prefix || "");
-        const serverTag: string = this._serverTag;
+    public returnUnusedRange(): Promise<void> {
+        const range = this._range;
+        const executor = this._store.getRequestExecutor(this._dbName);
 
-        if (serverTag) {
-            return StringUtil.format("{0}{1}-{2}", prefix, currentRangeValue, serverTag);
-        }
-
-        return StringUtil.format("{0}{1}", prefix, currentRangeValue);
+        return executor.execute(new HiloReturnCommand(this._tag, range.current, range.maxId));
     }
 
     public get range(): HiloRangeValue {

@@ -416,17 +416,17 @@ export class DocumentSubscriptions implements IDisposable {
     }
 
     /**
-     * Force server to close current client subscription connection to the server
+     * Force server to close all current client subscription connections to the server
      */
     public async dropConnection(name: string): Promise<void>;
 
     /**
-     * Force server to close current client subscription connection to the server
+     * Force server to close all current client subscription connections to the server
      */
     public async dropConnection(name: string, database: string): Promise<void>;
 
     /**
-     * Force server to close current client subscription connection to the server
+     * Force server to close all current client subscription connections to the server
      */
     public async dropConnection(name: string, database?: string): Promise<void> {
         const requestExecutor = this._store.getRequestExecutor(this._store.getEffectiveDatabase(database));

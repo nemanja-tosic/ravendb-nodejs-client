@@ -5,8 +5,10 @@ import { InMemoryDocumentSessionOperations } from "./InMemoryDocumentSessionOper
 import { TypedTimeSeriesEntry } from "./TimeSeries/TypedTimeSeriesEntry";
 import { TypeUtil } from "../../Utility/TypeUtil";
 import { TimeSeriesValuesHelper } from "./TimeSeries/TimeSeriesValuesHelper";
+import { ISessionDocumentTypedIncrementalTimeSeries } from "./ISessionDocumentTypedIncrementalTimeSeries";
 
-export class SessionDocumentTypedTimeSeries<T extends object> extends SessionTimeSeriesBase implements ISessionDocumentTypedTimeSeries<T> {
+export class SessionDocumentTypedTimeSeries<T extends object> extends SessionTimeSeriesBase
+    implements ISessionDocumentTypedTimeSeries<T>, ISessionDocumentTypedIncrementalTimeSeries<T> {
     private readonly _clazz: ClassConstructor<T>;
 
     public constructor(session: InMemoryDocumentSessionOperations, entity: any, name: string, clazz: ClassConstructor<T>);

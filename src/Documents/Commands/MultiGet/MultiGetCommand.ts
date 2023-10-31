@@ -13,7 +13,7 @@ import { throwError } from "../../../Exceptions";
 import { IDisposable } from "../../../Types/Contracts";
 import { RequestExecutor } from "../../../Http/RequestExecutor";
 import { AggressiveCacheOptions } from "../../../Http/AggressiveCacheOptions";
-import { HEADERS } from "../../../Constants";
+import { CONSTANTS, HEADERS } from "../../../Constants";
 import { ServerCasing, ServerResponse } from "../../../Types";
 import { ConditionalGetResult } from "../ConditionalGetDocumentsCommand";
 import { ObjectUtil } from "../../../Utility/ObjectUtil";
@@ -96,6 +96,11 @@ export class MultiGetCommand extends RavenCommand<GetResponse[]> implements IDis
 
         for (let i = 0; i < this._commands.length; i++) {
             const command = this._commands[i];
+
+            if (HEADERS.IF_NONE_MATCH in command.headers) {
+                continue;  // command already explicitly handling setting this, let's not touch it.
+            }
+
             const cacheKey = this._getCacheKey(command);
 
             let changeVector: string;

@@ -36,5 +36,6 @@ export class DatabaseSmugglerOptions implements IDatabaseSmugglerOptions {
         this.operateOnDatabaseRecordType = [...DatabaseSmugglerOptions.DEFAULT_OPERATE_ON_DATABASE_RECORD_TYPES];
         this.maxStepsForTransformScript = DatabaseSmugglerOptions.DEFAULT_MAX_STEPS_FOR_TRANSFORM_SCRIPT;
         this.includeExpired = true;
+        this.collections = [];
     }
 }

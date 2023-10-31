@@ -316,7 +316,7 @@ export interface StartingWithOptions {
 }
 
 export interface SessionLoadInternalParameters<TResult extends object> {
-    includes?: string[]; 
+    includes?: string[];
     documentType?: DocumentType<TResult>;
     counterIncludes?: string[];
     includeAllCounters?: boolean;

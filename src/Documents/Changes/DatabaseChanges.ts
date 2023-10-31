@@ -460,7 +460,7 @@ export class DatabaseChanges implements IDatabaseChanges {
 
                             transformedValue = Object.assign(transformedValue, overrides);
                         }
-                        this._notifySubscribers(type, transformedValue, Array.from(this._counters.values()));
+                        this._notifySubscribers(type, transformedValue);
                         break;
                     }
                 }
@@ -471,8 +471,11 @@ export class DatabaseChanges implements IDatabaseChanges {
         }
     }
 
-    private _notifySubscribers(type: string, value: any, states: DatabaseConnectionState[]): void {
+    private _notifySubscribers(type: string, value: any): void {
         switch (type) {
+            case "AggressiveCacheChange":
+                this._counters.forEach(state => state.send("AggressiveCache", AggressiveCacheChange.INSTANCE));
+                break;
             case "DocumentChange":
                 this._counters.forEach(state => state.send("Document", value));
                 break;

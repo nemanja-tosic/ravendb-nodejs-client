@@ -597,7 +597,9 @@ export class DocumentQuery<T extends object>
         query._whereTokens = this._whereTokens;
         query._orderByTokens = this._orderByTokens;
         query._groupByTokens = this._groupByTokens;
+        query._filterTokens = this._filterTokens;
         query._queryParameters = this._queryParameters;
+        query._filterModeStack = [...this._filterModeStack];
         query._start = this._start;
         query._timeout = this._timeout;
         query._queryStats = this._queryStats;
@@ -633,6 +635,7 @@ export class DocumentQuery<T extends object>
         query.projectionBehavior = queryData ? queryData.projectionBehavior : this.projectionBehavior;
         query._isIntersect = this._isIntersect;
         query._defaultOperator = this._defaultOperator;
+        query._filterLimit = this._filterLimit;
 
         return query;
     }

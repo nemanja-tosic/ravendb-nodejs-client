@@ -6,6 +6,7 @@ import { Reference } from "../../Utility/Reference";
 import { Topology } from "../../Http/Topology";
 import { HttpRequestParameters, HttpResponse } from "../../Primitives/Http";
 import { SessionDisposingEventArgs } from "../IDocumentStore";
+import { BulkInsertProgress } from "../Operations/BulkInsertProgress";
 
 export interface SessionEventsEmitter {
     on(eventName: "beforeStore", eventHandler: (eventArgs: SessionBeforeStoreEventArgs) => void): this;
@@ -141,6 +142,15 @@ export class SessionAfterSaveChangesEventArgs {
         }
 
         return this._documentMetadata;
+    }
+}
+
+export class BulkInsertOnProgressEventArgs {
+    public readonly progress: BulkInsertProgress;
+
+
+    public constructor(progress: BulkInsertProgress) {
+        this.progress = progress;
     }
 }
 

@@ -4,4 +4,5 @@ export interface TcpConnectionHeaderResponse {
     status: TcpConnectionStatus;
     message: string;
     version: number;
+    licensedFeatures: LicensedFeatures;
 }

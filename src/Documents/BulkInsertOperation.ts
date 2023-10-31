@@ -29,6 +29,7 @@ import { TimeSeriesValuesHelper } from "./Session/TimeSeries/TimeSeriesValuesHel
 
 export class BulkInsertOperation {
     private _options: BulkInsertOptions;
+    private _database: string;
     private readonly _generateEntityIdOnTheClient: GenerateEntityIdOnTheClient;
 
     private readonly _requestExecutor: RequestExecutor;
@@ -64,6 +65,7 @@ export class BulkInsertOperation {
         this._useCompression = options ? options.useCompression : false;
 
         this._options = options ?? {};
+        this._database = database;
 
         this._timeSeriesBatchSize = this._conventions.bulkInsert.timeSeriesBatchSize;
 
@@ -186,6 +188,10 @@ export class BulkInsertOperation {
 
         this._endPreviousCommandIfNeeded();
 
+        this._writeToStream(entity, id, metadata, "PUT");
+    }
+
+    private _writeToStream(entity: object, id: string, metadata: IMetadataDictionary, type: CommandType) {
         if (this._first) {
             this._first = false;
         } else {
@@ -219,7 +225,7 @@ export class BulkInsertOperation {
 
     private _concurrencyCheck(): IDisposable {
         if (this._concurrentCheck) {
-            throwError("InvalidOperationException", "Bulk Insert store methods cannot be executed concurrently.");
+            throwError("BulkInsertInvalidOperationException", "Bulk Insert store methods cannot be executed concurrently.");
         }
 
         this._concurrentCheck = 1;
@@ -285,7 +291,7 @@ export class BulkInsertOperation {
 
     private static _verifyValidId(id: string): void {
         if (StringUtil.isNullOrEmpty(id)) {
-            throwError("InvalidArgumentException", "Document id must have a non empty value." +
+            throwError("BulkInsertInvalidOperationException", "Document id must have a non empty value." +
                 "If you want to store object literals with empty id, please register convention here: store.conventions.findCollectionNameForObjectLiteral");
         }
 
@@ -584,6 +590,7 @@ export class BulkInsertOperation {
         protected async _appendInternal(timestamp: Date, values: number[], tag: string): Promise<void> {
             const check = this._operation._concurrencyCheck();
             try {
+                this._operation._lastWriteToStream = new Date();
 
                 await this._operation._executeBeforeStore();
 
@@ -730,6 +737,7 @@ export class BulkInsertOperation {
             const check = this._operation._concurrencyCheck();
 
             try {
+                this._operation._lastWriteToStream = new Date();
                 this._operation._endPreviousCommandIfNeeded();
 
                 await this._operation._executeBeforeStore();

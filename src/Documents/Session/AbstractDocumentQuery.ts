@@ -109,6 +109,11 @@ export abstract class AbstractDocumentQuery<T extends object, TSelf extends Abst
      */
     protected _negate: boolean;
 
+    /**
+     * Whether to negate the next operation in Filter
+     */
+    protected _negateFilter: boolean;
+
     private readonly _indexName: string;
     private readonly _collectionName: string;
     private _currentClauseDepth: number;
@@ -122,6 +127,8 @@ export abstract class AbstractDocumentQuery<T extends object, TSelf extends Abst
     public get collectionName() {
         return this._collectionName;
     }
+
+    protected _filterModeStack: boolean[] = [];
 
     protected _queryParameters: { [key: string]: object } = {};
 
@@ -150,11 +157,18 @@ export abstract class AbstractDocumentQuery<T extends object, TSelf extends Abst
 
     protected _withTokens: QueryToken[] = [];
 
+    protected _filterTokens: QueryToken[] = [];
+
     protected _graphRawQuery: QueryToken;
 
     protected _start: number;
 
     private readonly _conventions: DocumentConventions;
+
+    /**
+     * Limits filter clause.
+     */
+    protected _filterLimit: number;
 
     protected _timeout: number;
 
@@ -188,6 +202,11 @@ export abstract class AbstractDocumentQuery<T extends object, TSelf extends Abst
     protected _explanations: Explanations;
 
     protected _explanationToken: ExplanationToken;
+
+    protected isFilterActive(): boolean {
+        return this._filterModeStack.length && this._filterModeStack[0];
+    }
+
 
     public get isDistinct(): boolean {
         return this._selectTokens
@@ -404,7 +423,7 @@ export abstract class AbstractDocumentQuery<T extends object, TSelf extends Abst
     }
 
     public _usingDefaultOperator(operator): void {
-        if (!this._whereTokens || !!this._whereTokens.length) {
+        if (this._getCurrentWhereTokens().length > 0) {
             throwError("InvalidOperationException",
                 "Default operator can only be set before any where clause is added.");
         }
@@ -966,6 +985,8 @@ export abstract class AbstractDocumentQuery<T extends object, TSelf extends Abst
      * Check that the field has one of the specified value
      */
     public _whereIn(fieldName: string, values: any[], exact: boolean = false): void {
+        this._assertMethodIsCurrentlySupported("whereIn");
+
         fieldName = this._ensureValidFieldName(fieldName, false);
 
         const tokens = this._getCurrentWhereTokens();
@@ -981,6 +1002,8 @@ export abstract class AbstractDocumentQuery<T extends object, TSelf extends Abst
     }
 
     public _whereStartsWith(fieldName: string, value: any, exact: boolean = false): void {
+        this._assertMethodIsCurrentlySupported("whereStartsWith");
+
         const whereParams = new WhereParams();
         whereParams.fieldName = fieldName;
         whereParams.value = value;
@@ -1005,6 +1028,8 @@ export abstract class AbstractDocumentQuery<T extends object, TSelf extends Abst
      * Matches fields which ends with the specified value.
      */
     public _whereEndsWith(fieldName: string, value: any, exact: boolean = false): void {
+        this._assertMethodIsCurrentlySupported("whereEndsWith");
+
         const whereParams = new WhereParams();
         whereParams.fieldName = fieldName;
         whereParams.value = value;
@@ -1037,6 +1062,8 @@ export abstract class AbstractDocumentQuery<T extends object, TSelf extends Abst
      * Matches fields where the value is between the specified start and end, inclusive
      */
     public _whereBetween(fieldName: string, start: any, end: any, exact: boolean = false): void {
+        this._assertMethodIsCurrentlySupported("whereBetween");
+
         fieldName = this._ensureValidFieldName(fieldName, false);
 
         const tokens = this._getCurrentWhereTokens();
@@ -1165,6 +1192,8 @@ export abstract class AbstractDocumentQuery<T extends object, TSelf extends Abst
      * Matches fields where Regex.IsMatch(filedName, pattern)
      */
     public _whereRegex(fieldName: string, pattern: string): void {
+        this._assertMethodIsCurrentlySupported("whereRegex");
+
         fieldName = this._ensureValidFieldName(fieldName, false);
         const tokens = this._getCurrentWhereTokens();
         this._appendOperatorIfNeeded(tokens);
@@ -1227,6 +1256,8 @@ export abstract class AbstractDocumentQuery<T extends object, TSelf extends Abst
      * http://lucene.apache.org/java/2_4_0/queryparsersyntax.html#Boosting%20a%20Term
      */
     public _boost(boost: number): void {
+        this._assertMethodIsCurrentlySupported("boost");
+
         if (boost === 1.0) {
             return;
         }
@@ -1246,16 +1277,22 @@ export abstract class AbstractDocumentQuery<T extends object, TSelf extends Abst
 
             const close = last;
 
+            let openSubclauseToSkip = 0;
             let index = tokens.indexOf(last);
 
             while (last && index > 0) {
                 index--;
                 last = tokens[index]; // find the previous option
 
-                if (last instanceof OpenSubclauseToken) {
+                if (last instanceof CloseSubclauseToken) {
+                    // We have to count how many inner subclauses were inside current subclause
+                    openSubclauseToSkip++;
+                } else if (last instanceof OpenSubclauseToken && openSubclauseToSkip > 0) {
+                    // Inner subclause open - we have to skip it because we want to match only the leftmost opening.
+                    openSubclauseToSkip--;
+                } else if (last instanceof OpenSubclauseToken) {
                     last.boostParameterName = parameter;
                     close.boostParameterName = parameter;
-                    return;
                 }
             }
         } else {
@@ -1271,6 +1308,8 @@ export abstract class AbstractDocumentQuery<T extends object, TSelf extends Abst
      * https://lucene.apache.org/core/2_9_4/queryparsersyntax.html#Fuzzy%20Searches
      */
     public _fuzzy(fuzzy: number): void {
+        this._assertMethodIsCurrentlySupported("fuzzy");
+
         const tokens = this._getCurrentWhereTokens();
         if (!tokens && !tokens.length) {
             throwError("InvalidOperationException", "Fuzzy can only be used right after where clause.");
@@ -1299,6 +1338,7 @@ export abstract class AbstractDocumentQuery<T extends object, TSelf extends Abst
      * https://lucene.apache.org/core/2_9_4/queryparsersyntax.html#Proximity%20Searches
      */
     public _proximity(proximity: number): void {
+        this._assertMethodIsCurrentlySupported("proximity");
         const tokens = this._getCurrentWhereTokens();
         if (!tokens && !tokens.length) {
             throwError("InvalidOperationException", "Proximity can only be used right after search clause.");
@@ -1437,6 +1477,7 @@ export abstract class AbstractDocumentQuery<T extends object, TSelf extends Abst
      * If there is more than a single term, each of them will be checked independently.
      */
     public _search(fieldName: string, searchTerms: string, operator: SearchOperator = "OR"): void {
+        this._assertMethodIsCurrentlySupported("search");
         const tokens = this._getCurrentWhereTokens();
         this._appendOperatorIfNeeded(tokens);
 
@@ -1472,6 +1513,7 @@ export abstract class AbstractDocumentQuery<T extends object, TSelf extends Abst
         this._buildOrderBy(queryText);
 
         this._buildLoad(queryText);
+        this._buildFilter(queryText);
         this._buildSelect(queryText);
         this._buildInclude(queryText);
 
@@ -1605,6 +1647,8 @@ export abstract class AbstractDocumentQuery<T extends object, TSelf extends Abst
     }
 
     public _containsAny(fieldName: string, values: any[]): void {
+        this._assertMethodIsCurrentlySupported("containsAny");
+
         fieldName = this._ensureValidFieldName(fieldName, false);
 
         const tokens = this._getCurrentWhereTokens();
@@ -1618,6 +1662,8 @@ export abstract class AbstractDocumentQuery<T extends object, TSelf extends Abst
     }
 
     public _containsAll(fieldName: string, values: any[]): void {
+        this._assertMethodIsCurrentlySupported("containsAll");
+
         fieldName = this._ensureValidFieldName(fieldName, false);
 
         const tokens = this._getCurrentWhereTokens();

@@ -462,7 +462,8 @@ export class RequestExecutor implements IDisposable {
 
         const serverNode = new ServerNode({
             url: initialUrls[0],
-            database
+            database,
+            serverRole: "Member"
         });
 
         topology.nodes = [serverNode];
@@ -471,6 +472,7 @@ export class RequestExecutor implements IDisposable {
         executor._topologyEtag = RequestExecutor.INITIAL_TOPOLOGY_ETAG;
         executor._disableTopologyUpdates = true;
         executor._disableClientConfigurationUpdates = true;
+        executor._firstTopologyUpdate = executor.singleTopologyUpdateAsync(initialUrls, this.GLOBAL_APPLICATION_IDENTIFIER);
 
         return executor;
     }
@@ -542,6 +544,11 @@ export class RequestExecutor implements IDisposable {
                     this._log.info(`Update topology from ${parameters.node.url}.`);
 
                     const getTopology = new GetDatabaseTopologyCommand(parameters.debugTag, this.conventions.sendApplicationIdentifier ? parameters.applicationIdentifier : null);
+
+                    if (this._defaultTimeout != null && this._defaultTimeout > getTopology.timeout) {
+                        getTopology.timeout = this._defaultTimeout;
+                    }
+
                     await this.execute(getTopology, null, {
                         chosenNode: parameters.node,
                         nodeIndex: null,
@@ -609,7 +616,7 @@ export class RequestExecutor implements IDisposable {
 
         const topologyUpdate = this._firstTopologyUpdatePromise;
         const topologyUpdateStatus = this._firstTopologyUpdateStatus;
-        if ((topologyUpdate && topologyUpdateStatus.isResolved()) || this._disableTopologyUpdates) {
+        if ((topologyUpdate && topologyUpdateStatus.isResolved())) {
             const currentIndexAndNode: CurrentIndexAndNode = this.chooseNodeForRequest(command, sessionInfo);
             return this._executeOnSpecificNode(command, sessionInfo, {
                 chosenNode: currentIndexAndNode.currentNode,
@@ -622,13 +629,8 @@ export class RequestExecutor implements IDisposable {
     }
 
     public chooseNodeForRequest<TResult>(cmd: RavenCommand<TResult>, sessionInfo: SessionInfo): CurrentIndexAndNode {
-        if (!this._disableTopologyUpdates) {
-            // when we disable topology updates we cannot rely on the node tag,
-            // because the initial topology will not have them
-
-            if (!StringUtil.isNullOrWhitespace(cmd.selectedNodeTag)) {
-                return this._nodeSelector.getRequestedNode(cmd.selectedNodeTag);
-            }
+        if (StringUtil.isNullOrWhitespace(cmd.selectedNodeTag)) {
+            return this._nodeSelector.getRequestedNode(cmd.selectedNodeTag);
         }
 
         if (this.conventions.loadBalanceBehavior === "UseSessionContext") {
@@ -677,7 +679,11 @@ export class RequestExecutor implements IDisposable {
                         "No known topology and no previously known one, cannot proceed, likely a bug");
                 }
 
-                topologyUpdate = this._firstTopologyUpdate(this._lastKnownUrls, null);
+                if (!this._disableTopologyUpdates) {
+                    topologyUpdate = this._firstTopologyUpdate(this._lastKnownUrls, null);
+                } else {
+                    topologyUpdate = this._singleTopologyUpdateAsync(this._lastKnownUrls, null);
+                }
             }
 
             await topologyUpdate;
@@ -691,8 +697,6 @@ export class RequestExecutor implements IDisposable {
 
             throw reason;
         }
-
-
     }
 
     private _updateTopologyCallback(): Promise<void> {
@@ -880,10 +884,6 @@ export class RequestExecutor implements IDisposable {
 
         let url: string;
         const req = this._createRequest(chosenNode, command, u => url = u);
-
-        if (!req) {
-            return null;
-        }
 
         const controller = new AbortController();
 
@@ -1135,7 +1135,7 @@ export class RequestExecutor implements IDisposable {
         }
 
         if (!this._disableTopologyUpdates) {
-            req.headers[HEADERS.TOPOLOGY_ETAG] = `"${this._topologyEtag}"`;
+            req.headers[this._topologyHeaderName] = `"${this._topologyEtag}"`;
         }
 
         if (!req.headers[HEADERS.CLIENT_VERSION]) {
@@ -1469,9 +1469,7 @@ export class RequestExecutor implements IDisposable {
                     shouldRetry: true
                 });
 
-                if (!TypeUtil.isNullOrUndefined(nodeIndex)) {
-                    this._nodeSelector.restoreNodeIndex(nodeIndex);
-                }
+                this._nodeSelector.restoreNodeIndex(chosenNode);
 
                 return true;
             }
@@ -1528,22 +1526,24 @@ export class RequestExecutor implements IDisposable {
 
         this._spawnHealthChecks(chosenNode, nodeIndex);
 
-        const indexAndNodeAndEtag = this._nodeSelector.getPreferredNodeWithTopology();
+
+        const currentIndexAndNode = this.chooseNodeForRequest(command, sessionInfo);
+        const topologyEtag = this._nodeSelector.getTopology()?.etag ?? -2;
 
         if (command.failoverTopologyEtag !== this._topologyEtag) {
             command.failedNodes.clear();
             command.failoverTopologyEtag = this._topologyEtag;
         }
 
-        if (command.failedNodes.has(indexAndNodeAndEtag.currentNode)) {
+        if (command.failedNodes.has(currentIndexAndNode.currentNode)) {
             return false;
         }
 
         this._onFailedRequestInvoke(url, error, req, response);
 
         await this._executeOnSpecificNode(command, sessionInfo, {
-            chosenNode: indexAndNodeAndEtag.currentNode,
-            nodeIndex: indexAndNodeAndEtag.currentIndex,
+            chosenNode: currentIndexAndNode.currentNode,
+            nodeIndex: currentIndexAndNode.currentIndex,
             shouldRetry
         });
 
@@ -1736,7 +1736,7 @@ export class RequestExecutor implements IDisposable {
                             }
 
                             if (this._nodeSelector) {
-                                this._nodeSelector.restoreNodeIndex(nodeStatus.nodeIndex);
+                                this._nodeSelector.restoreNodeIndex(serverNode);
                             }
                         },
                         err => {

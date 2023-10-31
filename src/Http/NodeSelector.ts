@@ -131,7 +131,7 @@ export class NodeSelector {
         const len = Math.min(serverNodes.length, stateFailures.length);
 
         for (let i = 0; i < len; i++) {
-            if (stateFailures[i] === 0) {
+            if (stateFailures[i] === 0 && "Member" === serverNodes[i].serverRole) {
                 return new CurrentIndexAndNode(i, serverNodes[i]);
             }
         }
@@ -139,15 +139,8 @@ export class NodeSelector {
         return NodeSelector._unlikelyEveryoneFaultedChoice(state);
     }
 
-    public getPreferredNodeWithTopology(): CurrentIndexAndNodeAndEtag {
-        const state = this._state;
-        const preferredNode = NodeSelector.getPreferredNodeInternal(state);
-        const etag = state.topology ? (state.topology.etag || -2) : -2;
-        return {
-            currentIndex: preferredNode.currentIndex,
-            currentNode: preferredNode.currentNode,
-            topologyEtag: etag
-        };
+    public getNodeSelectorFailures() {
+        return this._state.failures;
     }
 
     private static _unlikelyEveryoneFaultedChoice(state: NodeSelectorState): CurrentIndexAndNode {
@@ -175,10 +168,11 @@ export class NodeSelector {
         return this.getPreferredNode();
     }
 
-    public restoreNodeIndex(nodeIndex: number): void {
+    public restoreNodeIndex(node: ServerNode): void {
         const state = this._state;
-        if (state.failures.length <= nodeIndex) {
-            return; // // the state was changed and we no longer have it?
+        const nodeIndex = state.nodes.indexOf(node);
+        if (nodeIndex === -1) {
+            return;
         }
 
         state.failures[nodeIndex] = 0;
@@ -255,18 +249,14 @@ export class NodeSelector {
         state.fastest = index;
         state.speedTestMode = 0;
 
+        this._ensureFastestNodeTimerExists();
+
         const minuteMs = moment.duration(1, "m").asMilliseconds();
-        if (this._updateFastestNodeTimer !== null) {
-            this._updateFastestNodeTimer.change(minuteMs);
-        } else {
-            this._updateFastestNodeTimer = new Timer(() => {
-                this._switchToSpeedTestPhase();
-                return Promise.resolve();
-            }, minuteMs);
-        }
+        this._updateFastestNodeTimer.change(minuteMs, null);
     }
 
     public scheduleSpeedTest(): void {
+        this._ensureFastestNodeTimerExists();
         this._switchToSpeedTestPhase();
     }
 }

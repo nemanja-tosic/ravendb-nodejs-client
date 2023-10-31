@@ -5,7 +5,7 @@ import { TimeSeriesEntry } from "./TimeSeries/TimeSeriesEntry";
 import { TypeUtil } from "../../Utility/TypeUtil";
 import { ITimeSeriesIncludeBuilder } from "./Loaders/ITimeSeriesIncludeBuilder";
 
-export class SessionDocumentTimeSeries extends SessionTimeSeriesBase implements ISessionDocumentTimeSeries {
+export class SessionDocumentTimeSeries extends SessionTimeSeriesBase implements ISessionDocumentTimeSeries, ISessionDocumentIncrementalTimeSeries {
 
     public constructor(session: InMemoryDocumentSessionOperations, entity: any, name: string)
     public constructor(session: InMemoryDocumentSessionOperations, documentId: string, name: string)

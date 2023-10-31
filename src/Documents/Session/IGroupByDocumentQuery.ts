@@ -11,4 +11,7 @@ export interface IGroupByDocumentQuery<T extends object> {
 
     selectCount(): IDocumentQuery<T>;
     selectCount(projectedName: string): IDocumentQuery<T>;
+
+    filter(builder: (factory: IFilterFactory<T>) => void);
+    filter(builder: (factory: IFilterFactory<T>) => void, limit: number);
 }
