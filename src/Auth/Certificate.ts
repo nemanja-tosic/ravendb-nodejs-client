@@ -2,14 +2,14 @@ import { IAuthOptions } from "./AuthOptions";
 import { StringUtil } from "../Utility/StringUtil";
 import { throwError } from "../Exceptions";
 import { AgentOptions } from "https";
-import WebSocket = require("ws");
+import { ClientOptions } from "ws";
 
 export type CertificateType = "pem" | "pfx";
 
 export interface ICertificate {
     toAgentOptions(): AgentOptions;
 
-    toWebSocketOptions(): WebSocket.ClientOptions;
+    toWebSocketOptions(): ClientOptions;
 }
 
 export abstract class Certificate implements ICertificate {
@@ -68,7 +68,7 @@ export abstract class Certificate implements ICertificate {
         return {};
     }
 
-    public toWebSocketOptions(): WebSocket.ClientOptions {
+    public toWebSocketOptions(): ClientOptions {
         if (this._passphrase) {
             return { passphrase: this._passphrase };
         }
@@ -106,7 +106,7 @@ export class PemCertificate extends Certificate {
         });
     }
 
-    public toWebSocketOptions(): WebSocket.ClientOptions {
+    public toWebSocketOptions(): ClientOptions {
         const result = super.toWebSocketOptions();
         return Object.assign(result, {
             cert: this._certificate,
@@ -152,7 +152,7 @@ export class PfxCertificate extends Certificate {
         });
     }
 
-    public toWebSocketOptions(): WebSocket.ClientOptions {
+    public toWebSocketOptions(): ClientOptions {
         const result = super.toWebSocketOptions();
         return Object.assign(result, {
             pfx: this._certificate as Buffer,
