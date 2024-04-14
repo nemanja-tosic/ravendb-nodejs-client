@@ -116,11 +116,12 @@ export class SingleNodeBatchCommand extends RavenCommand<BatchCommandResult> imp
             }
 
             const multipart = new LengthUnawareFormData();
+            /*
             multipart.append("main", body, { header: { ...headers, "Content-Type": "multipart/form-data" } });
             for (let i = 0; i < attachments.length; i++) {
                 multipart.append("attachment_" + i, attachments[i].body, { header: attachments[i].headers });
-            }
-            request.body = multipart;
+            }*/
+            request.body = null;
 
         } else {
             request.body = body;

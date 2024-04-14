@@ -7,7 +7,7 @@ import {
     ObjectLiteralDescriptor,
     ClassConstructor, EntityConstructor, Field
 } from "../../Types";
-import * as Pluralize from "pluralize";
+import Pluralize from "pluralize";
 import { ClientConfiguration } from "../Operations/Configuration/ClientConfiguration";
 import { ReadBalanceBehavior } from "../../Http/ReadBalanceBehavior";
 import { throwError } from "../../Exceptions";
@@ -84,7 +84,7 @@ export class DocumentConventions {
     private _firstBroadcastAttemptTimeout: number | undefined;
     private _secondBroadcastAttemptTimeout: number | undefined;
     private _waitForIndexesAfterSaveChangesTimeout: number | undefined;
-    private _waitForReplicationAfterSaveChangesTimeout: number | undefined;
+    private _waitForReplicationAfterSaveChangesTimeout: number | undefined; //tODO: not exposed?
     private _waitForNonStaleResultsTimeout: number | undefined;
 
     private _loadBalancerContextSeed: number;
@@ -94,8 +94,8 @@ export class DocumentConventions {
 
     private readonly _knownEntityTypes: Map<string, ObjectTypeDescriptor>;
 
-    private _localEntityFieldNameConvention: CasingConvention;
-    private _remoteEntityFieldNameConvention: CasingConvention;
+    private _localEntityFieldNameConvention: CasingConvention; //TODO: remove!
+    private _remoteEntityFieldNameConvention: CasingConvention; //TODO: remove!
 
     private _objectMapper: TypesAwareObjectMapper;
     private _customFetch: any;
@@ -966,7 +966,7 @@ export class DocumentConventions {
         return docTypeOrTypeName as ObjectTypeDescriptor<T>;
     }
 
-    public transformObjectKeysToRemoteFieldNameConvention(obj: object, opts?: ObjectChangeCaseOptions) {
+    public transformObjectKeysToRemoteFieldNameConvention(obj: object, opts?: ObjectChangeCaseOptions) { //TODO:
         if (!this._remoteEntityFieldNameConvention) {
             return obj;
         }
@@ -984,7 +984,7 @@ export class DocumentConventions {
         return ObjectUtil.transformObjectKeys(obj, options);
     }
 
-    public transformObjectKeysToLocalFieldNameConvention(
+    public transformObjectKeysToLocalFieldNameConvention( //TODO: delete?
         obj: object, opts?: ObjectChangeCaseOptions) {
         if (!this._localEntityFieldNameConvention) {
             return obj as object;
@@ -1005,7 +1005,7 @@ export class DocumentConventions {
     }
 
     public validate() {
-        if ((this._remoteEntityFieldNameConvention && !this._localEntityFieldNameConvention)
+        if ((this._remoteEntityFieldNameConvention && !this._localEntityFieldNameConvention) //TODO :
             || (!this._remoteEntityFieldNameConvention && this._localEntityFieldNameConvention)) {
             throwError("ConfigurationException",
                 "When configuring field name conventions, "

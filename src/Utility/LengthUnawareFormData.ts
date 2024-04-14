@@ -1,6 +1,5 @@
-import * as FormData from "form-data";
 
-export class LengthUnawareFormData extends FormData {
+export class LengthUnawareFormData  {
 
     // node fetch doesn't support stream.Readable very well
     // so we force request length to be unterminated

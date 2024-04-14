@@ -16,7 +16,7 @@ export function lastChunk(_: object, chunk: object) {
     return chunk;
 }
 
-export class CollectResultStream<TResult = object> extends Writable {
+export class CollectResultStream<TResult = object> extends Writable { //TODO: do we need it?
 
     private _resultIndex = 0;
     private _result: TResult;

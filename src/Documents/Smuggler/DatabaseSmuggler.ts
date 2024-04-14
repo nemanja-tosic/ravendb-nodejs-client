@@ -274,14 +274,15 @@ class ImportCommand extends RavenCommand<void> {
     createRequest(node: ServerNode): HttpRequestParameters {
         const uri = node.url + "/databases/" + node.database + "/smuggler/import?operationId=" + this._operationId;
 
+        /*
         const multipart = new LengthUnawareFormData();
         multipart.append("importOptions", this._serializer.serialize(this._options));
         multipart.append("file", this._stream, { filename: "name" });
-
+*/
         return {
             method: "POST",
             uri,
-            body: multipart,
+            body: null,
         };
     }
 
