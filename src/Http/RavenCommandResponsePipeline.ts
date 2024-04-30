@@ -12,8 +12,8 @@ import { throwError, getError } from "../Exceptions/index.js";
 import { TypeUtil } from "../Utility/TypeUtil.js";
 import { ErrorFirstCallback } from "../Types/Callbacks.js";
 import { StringBuilder } from "../Utility/StringBuilder.js";
-import JsonlParser from "stream-json/jsonl/Parser.js";
 import { FieldNameConversion } from "../Utility/ObjectUtil.js";
+import { Buffer } from "node:buffer";
 
 export interface RavenCommandResponsePipelineOptions {
     collectBody?: boolean | ((body: string) => void);
@@ -114,7 +114,6 @@ export class RavenCommandResponsePipeline<TStreamResult> extends EventEmitter {
         }
 
         if (opts.jsonlAsync) {
-            streams.push(new JsonlParser());
 
             if (opts.jsonlAsync.transforms) {
                 streams.push(...opts.jsonlAsync.transforms);

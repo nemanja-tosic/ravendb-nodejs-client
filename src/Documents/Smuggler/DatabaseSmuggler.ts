@@ -7,7 +7,7 @@ import { DatabaseSmugglerExportOptions } from "./DatabaseSmugglerExportOptions.j
 import { HttpCache } from "../../Http/HttpCache.js";
 import { HeadersBuilder } from "../../Utility/HttpUtil.js";
 import { DatabaseSmugglerOptions } from "./DatabaseSmugglerOptions.js";
-import { existsSync, mkdirSync, createWriteStream, readdirSync, createReadStream } from "node:fs";
+
 import { pipelineAsync } from "../../Utility/StreamUtil.js";
 import { dirname, resolve, extname } from "node:path";
 import { BackupUtils } from "./BackupUtils.js";
@@ -18,8 +18,6 @@ import { RavenCommand, ResponseDisposeHandling } from "../../Http/RavenCommand.j
 import { DocumentConventions } from "../Conventions/DocumentConventions.js";
 import { ServerNode } from "../../Http/ServerNode.js";
 import { Readable } from "node:stream";
-import { FormData } from "node-fetch";
-import { fileFromSync } from "fetch-blob/from.js";
 
 export class DatabaseSmuggler {
     private readonly _store: IDocumentStore;
@@ -48,15 +46,7 @@ export class DatabaseSmuggler {
 
     public async export(options: DatabaseSmugglerExportOptions, toFile: string): Promise<OperationCompletionAwaiter> {
         const directory = dirname(resolve(toFile));
-        if (!existsSync(directory)) {
-            mkdirSync(directory, { recursive: true });
-        }
-
-        return await this._export(options, async response => {
-            const fileStream = createWriteStream(toFile);
-            await pipelineAsync(response, fileStream);
-        });
-
+       return null;
     }
 
     private async _export(options: DatabaseSmugglerExportOptions, handleStreamResponse: (stream: Readable) => Promise<void>) {
@@ -81,25 +71,7 @@ export class DatabaseSmuggler {
     }
 
     public async importIncremental(options: DatabaseSmugglerImportOptions, fromDirectory: string) {
-        const files = readdirSync(fromDirectory)
-            .filter(x => BackupUtils.BACKUP_FILE_SUFFIXES.includes("." + extname(x)))
-            .sort(BackupUtils.comparator);
-
-        if (!files.length) {
-            return;
-        }
-
-        const oldOperateOnTypes = DatabaseSmuggler.configureOptionsFromIncrementalImport(options);
-
-        for (let i = 0; i < files.length - 1; i++) {
-            const filePath = files[i];
-            await this.import(options, resolve(filePath));
-        }
-
-        options.operateOnTypes = oldOperateOnTypes;
-
-        const lastFile = files.at(-1);
-        await this.import(options, resolve(lastFile));
+       return null;
     }
 
     public static configureOptionsFromIncrementalImport(options: DatabaseSmugglerOptions) {
@@ -116,18 +88,9 @@ export class DatabaseSmuggler {
     }
 
     public async import(options: DatabaseSmugglerImportOptions, fromFile: string): Promise<OperationCompletionAwaiter> {
-        let countOfFileParts = 0;
 
-        let result: OperationCompletionAwaiter;
 
-        do {
-            result = await this._import(options, fromFile);
-
-            countOfFileParts++;
-            fromFile = StringUtil.format("{0}.part{1}", fromFile, countOfFileParts);
-        } while (existsSync(fromFile));
-
-        return result;
+       return null;
     }
 
     private async _import(options: DatabaseSmugglerImportOptions, file: string): Promise<OperationCompletionAwaiter> {
@@ -257,15 +220,7 @@ class ImportCommand extends RavenCommand<void> {
     createRequest(node: ServerNode): HttpRequestParameters {
         const uri = node.url + "/databases/" + node.database + "/smuggler/import?operationId=" + this._operationId;
 
-        const multipart = new FormData();
-        multipart.append("importOptions", this._serializer.serialize(this._options));
-        multipart.append("name", fileFromSync(this._file));
-
-        return {
-            method: "POST",
-            uri,
-            body: multipart,
-        };
+       return null;
     }
 
 }

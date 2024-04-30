@@ -1,8 +1,5 @@
 import fs from "node:fs";
 import path from "node:path";
-import url from "node:url";
-import http from "node:http";
-import https from "node:https";
 import { IDisposable, IDocumentStore, IAuthOptions } from "../../src/index.js";
 import { RavenTestDriver } from "../TestDriver/index.js";
 import { RavenServerLocator } from "../TestDriver/RavenServerLocator.js";
@@ -100,7 +97,7 @@ class TestSecuredServiceLocator extends RavenServerLocator {
 
     private _getHttpsServerTcpUrl() {
         const https = this._getHttpsServerUrl();
-        return "tcp://" + url.parse(https).hostname + ":38882";
+        return null;
     }
 
     public getServerCertificatePath() {
@@ -750,7 +747,8 @@ setupRavenDbTestContext();
 
 export let clusterTestContext: ClusterTestContext;
 
-function checkAgent(agentName: string, agent: http.Agent) {
+function checkAgent(agentName: string, agent: any) {
+    /* TODO
     const reqKeys = Object.keys(agent.requests);
     if (reqKeys.length) {
         // eslint-disable-next-line no-console
@@ -761,7 +759,7 @@ function checkAgent(agentName: string, agent: http.Agent) {
     if (sockKeys.length) {
         // eslint-disable-next-line no-console
         console.log(`${agentName} dangling sockets: ${sockKeys}`);
-    }
+    }*/
 }
 
 function setupRavenDbTestContext() {
@@ -779,11 +777,14 @@ function setupRavenDbTestContext() {
 
     after(() => {
         testContext.dispose();
+        /*
 
         process.on("beforeExit", () => {
             checkAgent("http", http.globalAgent);
             checkAgent("https", https.globalAgent);
         });
+
+         */
     });
 
     return testContext;

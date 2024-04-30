@@ -1,5 +1,5 @@
 import { pipeline, Writable, Transform, TransformCallback, Readable } from "node:stream";
-import { EOL } from "node:os";
+const EOL = "\r\n"
 import { DocumentQuery } from "./DocumentQuery.js";
 import { MultiLoaderWithInclude } from "./Loaders/MultiLoaderWithInclude.js";
 import { BatchOperation } from "./Operations/BatchOperation.js";

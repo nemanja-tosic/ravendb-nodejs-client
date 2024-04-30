@@ -1,7 +1,6 @@
 import { Stream, Transform, Writable } from "node:stream";
 import { RavenCommandResponsePipeline } from "../../../Http/RavenCommandResponsePipeline.js";
 import { DocumentConventions } from "../../../Documents/Conventions/DocumentConventions.js";
-import JsonlStringer from "stream-json/jsonl/Stringer.js";
 import { ObjectUtil } from "../../../Utility/ObjectUtil.js";
 
 export function getDocumentResultsAsObjects(
@@ -38,7 +37,6 @@ export function getDocumentStreamResultsIntoStreamPipeline(
 
     return pipeline.parseJsonlAsync(x => x["Item"], {
             transforms: [
-                new JsonlStringer({ replacer: (key, value) => key === '' ? value.value : value }),
             ]
         });
 }

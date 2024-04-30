@@ -9,7 +9,7 @@ export class StringBuilder {
 
         Stream.call(this);
 
-        const isWindows = process.platform === "win32";
+        const isWindows = true;
         this.newline = isWindows ? "\r\n" : "\n";
     }
 

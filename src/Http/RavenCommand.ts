@@ -11,9 +11,8 @@ import { TypeInfo } from "../Mapping/ObjectMapper.js";
 import { JsonSerializer } from "../Mapping/Json/Serializer.js";
 import { RavenCommandResponsePipeline } from "./RavenCommandResponsePipeline.js";
 import { DocumentConventions } from "../Documents/Conventions/DocumentConventions.js";
-import { Agent } from "node:http";
+import { Dispatcher } from "undici-types";
 import { ObjectTypeDescriptor } from "../Types/index.js";
-import { ReadableWebToNodeStream } from "../Utility/ReadableWebToNodeStream.js";
 import { ObjectUtil } from "../Utility/ObjectUtil.js";
 
 const log = getLogger({ module: "RavenCommand" });
@@ -119,20 +118,21 @@ export abstract class RavenCommand<TResult> {
             this._responseType);
     }
 
-    public async send(agent: Agent,
+    public async send(dispatcher: Dispatcher,
         requestOptions: HttpRequestParameters): Promise<{ response: HttpResponse, bodyStream: Readable }> {
 
         const { body, uri, fetcher, ...restOptions } = requestOptions;
 
         log.info(`Send command ${this.constructor.name} to ${uri}${body ? " with body " + body : ""}.`);
 
+        /*
         if (requestOptions.agent) { // support for fiddler
             agent = requestOptions.agent as Agent;
-        }
+        }*/
 
         const bodyToUse = fetcher ? RavenCommand.maybeWrapBody(body) : body;
 
-        const optionsToUse = { body: bodyToUse, ...restOptions, agent } as RequestInit;
+        const optionsToUse = { body: bodyToUse, ...restOptions, dispatcher } as RequestInit;
 
         const passthrough = new PassThrough();
         passthrough.pause();
@@ -141,8 +141,8 @@ export abstract class RavenCommand<TResult> {
         const response = await fetchFn(uri, optionsToUse);
 
         const effectiveStream: Readable =
-            fetcher && response.body
-                ? new ReadableWebToNodeStream(response.body)
+            response.body
+                ? Readable.fromWeb(response.body)
                 : (response.body ?? new Stream());
 
         effectiveStream

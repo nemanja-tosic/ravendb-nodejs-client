@@ -2,7 +2,7 @@ import { DocumentType } from "../DocumentAbstractions.js";
 import { getLogger } from "../../Utility/LogUtil.js";
 import { GenerateEntityIdOnTheClient } from "../Identity/GenerateEntityIdOnTheClient.js";
 import { throwError } from "../../Exceptions/index.js";
-import { EOL } from "node:os";
+const EOL = "\r\n"
 import { CONSTANTS } from "../../Constants.js";
 import { StringUtil } from "../../Utility/StringUtil.js";
 import { createMetadataDictionary } from "../../Mapping/MetadataAsDictionary.js";

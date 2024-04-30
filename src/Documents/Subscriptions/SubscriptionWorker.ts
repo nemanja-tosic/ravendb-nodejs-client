@@ -23,14 +23,12 @@ import { ObjectUtil } from "../../Utility/ObjectUtil.js";
 import { SubscriptionConnectionServerMessage } from "./SubscriptionConnectionServerMessage.js";
 import { EmptyCallback } from "../../Types/Callbacks.js";
 import { delay, wrapWithTimeout } from "../../Utility/PromiseUtil.js";
-import Parser from "stream-json/Parser.js";
-import StreamValues from "stream-json/streamers/StreamValues.js";
 import { BatchFromServer, CounterIncludeItem } from "./BatchFromServer.js";
 import { ServerNode } from "../../Http/ServerNode.js";
 import { RequestExecutor } from "../../Http/RequestExecutor.js";
 import { GetTcpInfoCommand, TcpConnectionInfo } from "../../ServerWide/Commands/GetTcpInfoCommand.js";
 import { GetTcpInfoForRemoteTaskCommand } from "../Commands/GetTcpInfoForRemoteTaskCommand.js";
-import { EOL } from "node:os";
+const EOL = "\r\n"
 import { DocumentConventions } from "../Conventions/DocumentConventions.js";
 import { ServerCasing, ServerResponse } from "../../Types/index.js";
 import { CONSTANTS } from "../../Constants.js";
@@ -280,8 +278,6 @@ export class SubscriptionWorker<T extends object> implements IDisposable {
 
         this._parser = pipeline([
             socket,
-            new Parser({ jsonStreaming: true, streamValues: false }),
-            new StreamValues(),
             keysTransform
         ], err => {
             if (err && !socket.destroyed) {

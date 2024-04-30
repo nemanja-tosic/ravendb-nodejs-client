@@ -2,7 +2,7 @@ import { closeHttpResponse } from "../Utility/HttpUtil.js";
 import { StatusCodes } from "../Http/StatusCode.js";
 import { HttpResponse } from "../Primitives/Http.js";
 import { JsonSerializer } from "../Mapping/Json/Serializer.js";
-import { EOL } from "node:os";
+const EOL = "\r\n"
 
 export function throwError(errName: RavenErrorType): never;
 export function throwError(errName: RavenErrorType, message: string): never;

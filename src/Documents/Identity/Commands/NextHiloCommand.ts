@@ -5,7 +5,6 @@ import { throwError } from "../../../Exceptions/index.js";
 import { HttpRequestParameters } from "../../../Primitives/Http.js";
 import { Stream } from "node:stream";
 import { DocumentConventions } from "../../Conventions/DocumentConventions.js";
-import { stringify } from "node:querystring";
 
 export interface HiLoResult {
     prefix: string;
@@ -55,13 +54,7 @@ export class NextHiloCommand extends RavenCommand<HiLoResult> {
             ? DateUtil.default.stringify(this._lastRangeAt)
             : "";
 
-        const queryString = stringify({
-            tag: this._tag,
-            lastBatchSize: this._lastBatchSize,
-            lastRangeAt,
-            identityPartsSeparator: this._identityPartsSeparator,
-            lastMax: this._lastRangeMax
-        });
+        const queryString = "";
 
         const uri = `${node.url}/databases/${node.database}/hilo/next?${queryString}`;
         return { uri };

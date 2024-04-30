@@ -1,6 +1,6 @@
 import { GetClusterTopologyCommand } from "../ServerWide/Commands/GetClusterTopologyCommand.js";
 import { NodeSelector } from "./NodeSelector.js";
-import { EOL } from "node:os";
+const EOL = "\r\n"
 import { getLogger } from "../Utility/LogUtil.js";
 import { RequestExecutor, IRequestExecutorOptions } from "./RequestExecutor.js";
 import { throwError } from "../Exceptions/index.js";

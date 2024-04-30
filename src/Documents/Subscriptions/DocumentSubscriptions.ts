@@ -16,7 +16,7 @@ import { DropSubscriptionConnectionCommand } from "../Commands/DropSubscriptionC
 import { GetSubscriptionsCommand } from "../Commands/GetSubscriptionsCommand.js";
 import { ToggleOngoingTaskStateOperation } from "../Operations/OngoingTasks/ToggleOngoingTaskStateOperation.js";
 import { SubscriptionIncludeBuilder } from "../Session/Loaders/SubscriptionIncludeBuilder.js";
-import { EOL } from "node:os";
+const EOL = "\r\n"
 import { IncludesUtil } from "../Session/IncludesUtil.js";
 import { StringBuilder } from "../../Utility/StringBuilder.js";
 import { SubscriptionUpdateOptions } from "./SubscriptionUpdateOptions.js";

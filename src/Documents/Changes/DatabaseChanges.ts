@@ -7,7 +7,6 @@ import { OperationStatusChange } from "./OperationStatusChange.js";
 import { DatabaseConnectionState } from "./DatabaseConnectionState.js";
 import { ChangesObservable } from "./ChangesObservable.js";
 import { throwError } from "../../Exceptions/index.js";
-import { WebSocket, ClientOptions, Data } from "ws";
 import { StringUtil } from "../../Utility/StringUtil.js";
 import { EventEmitter } from "node:events";
 import { defer } from "../../Utility/PromiseUtil.js";
@@ -39,7 +38,7 @@ export class DatabaseChanges implements IDatabaseChanges {
     private readonly _database: string;
 
     private readonly _onDispose: () => void;
-    private _client: WebSocket;
+    private _client: any;
 
     private readonly _task;
     private _isCanceled = false;
@@ -65,16 +64,15 @@ export class DatabaseChanges implements IDatabaseChanges {
         this._task = this._doWork(nodeTag);
     }
 
-    public static createClientWebSocket(requestExecutor: RequestExecutor, url: string): WebSocket {
+    public static createClientWebSocket(requestExecutor: RequestExecutor, url: string): any {
         const authOptions = requestExecutor.getAuthOptions();
-        let options = undefined as ClientOptions;
 
         if (authOptions) {
             const certificate = Certificate.createFromOptions(authOptions);
-            options = certificate.toWebSocketOptions();
+            //options = certificate.toWebSocketOptions();
         }
 
-        return new WebSocket(url, options);
+        return null;
     }
 
     private async _onConnectionStatusChanged() {
@@ -97,7 +95,7 @@ export class DatabaseChanges implements IDatabaseChanges {
     }
 
     public get connected() {
-        return this._client && this._client.readyState === WebSocket.OPEN;
+        return true;
     }
 
     public on(eventName: "connectionStatus", handler: () => void): this;
@@ -390,7 +388,7 @@ export class DatabaseChanges implements IDatabaseChanges {
                 this._confirmations.clear();
             });
 
-            this._client.on("message", async (data: Data) => {
+            this._client.on("message", async (data: any) => {
                 await this._processChanges(data as string);
             });
         }

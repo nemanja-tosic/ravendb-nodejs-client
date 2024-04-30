@@ -1,5 +1,5 @@
 import { QueryToken } from "./QueryToken.js";
-import { EOL } from "node:os";
+const EOL = "\r\n"
 
 export class DeclareToken extends QueryToken {
 

@@ -76,7 +76,7 @@ import { QueryHighlightings } from "../Queries/Highlighting/QueryHighlightings.j
 import { ExplanationOptions } from "../Queries/Explanation/ExplanationOptions.js";
 import { CountersByDocId } from "./CounterInternalTypes.js";
 import { IncludeBuilderBase } from "./Loaders/IncludeBuilderBase.js";
-import { EOL } from "node:os";
+const EOL = "\r\n"
 import { GraphQueryToken } from "./Tokens/GraphQueryToken.js";
 import { IncludesUtil } from "./IncludesUtil.js";
 import { TimeSeriesIncludesToken } from "./Tokens/TimeSeriesIncludesToken.js";

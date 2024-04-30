@@ -1,7 +1,6 @@
 import { CONSTANTS } from "../../Constants.js";
 import { StringUtil } from "../../Utility/StringUtil.js";
 import { basename, extname, resolve } from "node:path";
-import { statSync } from "node:fs";
 
 export class BackupUtils {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -56,10 +55,7 @@ export class BackupUtils {
             return periodicBackupFileExtensionComparator(o1, o2);
         }
 
-        const lastModified1 = statSync(o1).mtimeMs;
-        const lastModified2 = statSync(o2).mtimeMs;
-
-        return lastModified1 - lastModified2;
+     return null;
     }
 
 }

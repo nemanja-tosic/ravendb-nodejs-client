@@ -18,8 +18,8 @@ import { TimeUtil } from "../../../Utility/TimeUtil.js";
 import { PutAttachmentCommandHelper } from "./PutAttachmentCommandHelper.js";
 import { TypeUtil } from "../../../Utility/TypeUtil.js";
 import { ObjectUtil } from "../../../Utility/ObjectUtil.js";
-import { Agent } from "node:http";
 import { readToBuffer } from "../../../Utility/StreamUtil.js";
+import { Dispatcher } from "undici-types";
 
 export class SingleNodeBatchCommand extends RavenCommand<BatchCommandResult> implements IDisposable {
     private _supportsAtomicWrites: boolean | null;
@@ -72,7 +72,7 @@ export class SingleNodeBatchCommand extends RavenCommand<BatchCommandResult> imp
         }
     }
 
-    async send(agent: Agent, requestOptions: HttpRequestParameters): Promise<{
+    async send(dispatcher: Dispatcher, requestOptions: HttpRequestParameters): Promise<{
         response: HttpResponse;
         bodyStream: Readable
     }> {
@@ -95,7 +95,7 @@ export class SingleNodeBatchCommand extends RavenCommand<BatchCommandResult> imp
             }
         }
 
-        return super.send(agent, requestOptions);
+        return super.send(dispatcher, requestOptions);
     }
 
     public createRequest(node: ServerNode): HttpRequestParameters {

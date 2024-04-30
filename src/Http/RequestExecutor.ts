@@ -1,4 +1,4 @@
-import { EOL } from "node:os";
+const EOL = "\r\n"
 import { Readable } from "node:stream";
 import { acquireSemaphore, SemaphoreAcquisitionContext } from "../Utility/SemaphoreUtil.js";
 import { getLogger, ILogger } from "../Utility/LogUtil.js";
@@ -31,8 +31,6 @@ import { validateUri } from "../Utility/UriUtil.js";
 import { readToEnd } from "../Utility/StreamUtil.js";
 import { closeHttpResponse } from "../Utility/HttpUtil.js";
 import { PromiseStatusTracker } from "../Utility/PromiseUtil.js";
-import { Agent as httpAgent } from "node:http";
-import { Agent as httpsAgent } from "node:https";
 import { IBroadcast } from "./IBroadcast.js";
 import { StringUtil } from "../Utility/StringUtil.js";
 import { IRaftCommand } from "./IRaftCommand.js";
@@ -49,6 +47,7 @@ import { randomUUID } from "node:crypto";
 import { DatabaseHealthCheckOperation } from "../Documents/Operations/DatabaseHealthCheckOperation.js";
 import { GetNodeInfoCommand } from "../ServerWide/Commands/GetNodeInfoCommand.js";
 import { Semaphore } from "../Utility/Semaphore.js";
+import { Dispatcher } from "undici-types";
 
 const DEFAULT_REQUEST_OPTIONS = {};
 
@@ -183,15 +182,15 @@ export class RequestExecutor implements IDisposable {
 
     protected _firstTopologyUpdatePromiseInternal;
 
-    private _httpAgent: httpAgent;
+    private _httpAgent: Dispatcher;
 
     /*
       we don't initialize this here due to issue with cloudflare
       see: https://github.com/cloudflare/miniflare/issues/292
     */
-    private static KEEP_ALIVE_HTTP_AGENT: httpAgent = null;
+    private static KEEP_ALIVE_HTTP_AGENT: Dispatcher = null; //TODO: remove?
 
-    private static readonly HTTPS_AGENT_CACHE = new Map<string, httpsAgent>();
+    private static readonly HTTPS_AGENT_CACHE = new Map<string, Dispatcher>();
 
     protected get firstTopologyUpdatePromise(): Promise<void> {
         return this._firstTopologyUpdatePromiseInternal;
@@ -337,7 +336,7 @@ export class RequestExecutor implements IDisposable {
             : null;
     }
 
-    public getHttpAgent(): httpAgent {
+    public getHttpAgent(): Dispatcher {
         if (this.conventions.customFetch) {
             return null;
         }
@@ -349,20 +348,14 @@ export class RequestExecutor implements IDisposable {
         return this._httpAgent = this._createHttpAgent();
     }
 
-    private _createHttpAgent(): httpAgent {
+    private _createHttpAgent(): Dispatcher {
         if (this._certificate) {
             const agentOptions = this._certificate.toAgentOptions();
             const cacheKey = JSON.stringify(agentOptions, null, 0);
             if (RequestExecutor.HTTPS_AGENT_CACHE.has(cacheKey)) {
                 return RequestExecutor.HTTPS_AGENT_CACHE.get(cacheKey);
             } else {
-                const agent = new httpsAgent({
-                    keepAlive: true,
-                    ...agentOptions
-                });
-
-                RequestExecutor.HTTPS_AGENT_CACHE.set(cacheKey, agent);
-                return agent;
+                return null;
             }
         } else {
             RequestExecutor.assertKeepAliveAgent();
@@ -372,9 +365,10 @@ export class RequestExecutor implements IDisposable {
 
     private static assertKeepAliveAgent() {
         if (!RequestExecutor.KEEP_ALIVE_HTTP_AGENT) {
-            RequestExecutor.KEEP_ALIVE_HTTP_AGENT = new httpAgent({
-                keepAlive: true
-            });
+            /*
+            RequestExecutor.KEEP_ALIVE_HTTP_AGENT = new Dispatcher({
+                // TODO pipelining: 0
+            });*/
         }
     }
 

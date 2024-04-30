@@ -14,7 +14,7 @@ export function parseJsonVerbose(jsonString: string) {
     }
 }
 
-
+//TODO: only used in tests
 export async function parseJsonStreamVerbose(jsonString: string) {
     if (!jsonString) {
         throw new Error("JSON cannot be empty.");

@@ -1,4 +1,4 @@
-import { EOL } from "node:os";
+const EOL = "\r\n"
 
 export class JavaScriptMap<TKey, TValue> {
     private readonly _suffix: number;

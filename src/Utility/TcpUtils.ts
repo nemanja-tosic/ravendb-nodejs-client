@@ -1,10 +1,6 @@
 import net from "node:net";
 import { Socket } from "node:net";
-import { URL } from "node:url";
 import { IAuthOptions } from "../Auth/AuthOptions.js";
-import tls from "node:tls";
-import { Certificate } from "../Auth/Certificate.js";
-import { PeerCertificate } from "node:tls";
 import { getError, throwError } from "../Exceptions/index.js";
 import { TcpConnectionInfo } from "../ServerWide/Commands/GetTcpInfoCommand.js";
 import { OperationTypes, SupportedFeatures } from "../ServerWide/Tcp/TcpConnectionHeaderMessage.js";
@@ -14,11 +10,14 @@ export class TcpUtils {
         urlString: string, 
         serverCertificate: string,
         clientCertificate: IAuthOptions): Promise<Socket> {
+        return null;
+        /*
         const url = new URL(urlString);
         const host = url.hostname;
         const port = Number.parseInt(url.port, 10);
 
         if (serverCertificate && clientCertificate) {
+            /* TODO
             return new Promise<Socket>((resolve, reject) => {
                 const agentOptions = Certificate.createFromOptions(clientCertificate).toAgentOptions();
                 agentOptions.checkServerIdentity = (host: string, peerCertificate: PeerCertificate) => {
@@ -61,7 +60,7 @@ export class TcpUtils {
 
                 socket.once("error", reject);
             });
-        }
+        }*/
     }
 
     public static async connectSecuredTcpSocket(info: TcpConnectionInfo, serverCertificate: string,
