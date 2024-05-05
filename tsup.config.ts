@@ -2,10 +2,13 @@ import { defineConfig, Options } from "tsup";
 
 export default defineConfig(options => {
 	const commonOptions: Partial<Options> = {
+		external: [/node:.*/],
 		entry: {
 			ravendb: "src/index.ts"
 		},
 		sourcemap: true,
+		dts: true,
+		clean: true,
 		...options
 	}
 
@@ -25,18 +28,12 @@ export default defineConfig(options => {
 			...commonOptions,
 			...productionOptions,
 			format: ["esm"],
-			dts: true,
-			clean: true,
-			sourcemap: true,
-			external: [/node:.*/]
+			outDir: "./dist/",
 		},
 		// CJS
 		{
 			...commonOptions,
 			...productionOptions,
-			entry: {
-				"ravendb": "src/index.ts"
-			},
 			format: "cjs",
 			outDir: "./dist/cjs/"
 		}
