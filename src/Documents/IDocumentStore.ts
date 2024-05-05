@@ -313,4 +313,14 @@ export interface IDocumentStore extends IDisposable,
 
     addSessionListener(
         eventName: "afterConversionToEntity", eventHandler: (eventArgs: AfterConversionToEntityEventArgs) => void): this;
+
+    getLastTransactionIndex(database: string): number;
+
+    setLastTransactionIndex(database: string, index: number): void;
+
+    registerEvents(executor: RequestExecutor): void;
+
+    getEffectiveDatabase(database: string): string;
+
+    assertInitialized(): void;
 }

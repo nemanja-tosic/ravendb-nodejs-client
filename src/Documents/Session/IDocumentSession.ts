@@ -18,7 +18,7 @@ import { throwError } from "../../Exceptions/index.js";
 import { StringUtil } from "../../Utility/StringUtil.js";
 import CurrentIndexAndNode from "../../Http/CurrentIndexAndNode.js";
 import { HashCalculator } from "../Queries/HashCalculator.js";
-import { DocumentStoreBase } from "../DocumentStoreBase.js";
+import { IDocumentStore } from "../IDocumentStore.js";
 import { RequestExecutor } from "../../Http/RequestExecutor.js";
 import { AbstractCommonApiForIndexes } from "../Indexes/AbstractCommonApiForIndexes.js";
 import { AbstractTimeSeriesRange } from "../Operations/TimeSeries/AbstractTimeSeriesRange.js";
@@ -38,7 +38,7 @@ export class SessionInfo {
     public lastClusterTransactionIndex: number;
     public noCaching: boolean;
 
-    public constructor(session: InMemoryDocumentSessionOperations, options: SessionOptions, documentStore: DocumentStoreBase) {
+    public constructor(session: InMemoryDocumentSessionOperations, options: SessionOptions, documentStore: IDocumentStore) {
         if (!documentStore) {
             throwError("InvalidArgumentException", "DocumentStore cannot be null");
         }

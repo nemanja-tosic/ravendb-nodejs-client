@@ -1,7 +1,7 @@
 import { HiloIdGenerator } from "./HiloIdGenerator.js";
 import { acquireSemaphore } from "../../Utility/SemaphoreUtil.js";
 import { IRavenObject } from "../../Types/IRavenObject.js";
-import { DocumentStore } from "../DocumentStore.js";
+import { IDocumentStore } from "../IDocumentStore.js";
 import { DocumentConventions } from "../Conventions/DocumentConventions.js";
 import { DefaultHiLoIdGenerator } from "./DefaultHiLoIdGenerator.js";
 import { Semaphore } from "../../Utility/Semaphore.js";
@@ -9,12 +9,12 @@ import { Semaphore } from "../../Utility/Semaphore.js";
 export class MultiTypeHiLoIdGenerator {
     private readonly _sem: Semaphore;
     protected _idGeneratorsByTag: IRavenObject<HiloIdGenerator> = {};
-    protected readonly _store: DocumentStore;
+    protected readonly _store: IDocumentStore;
     protected readonly _dbName: string;
     protected readonly _conventions: DocumentConventions;
     private _identityPartsSeparator: string;
 
-    constructor(store: DocumentStore, dbName?: string) {
+    constructor(store: IDocumentStore, dbName?: string) {
         this._store = store;
         this._dbName = dbName;
         this._sem = new Semaphore();

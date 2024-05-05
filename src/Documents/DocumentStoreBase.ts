@@ -28,7 +28,6 @@ import { PutIndexesOperation } from "./Operations/Indexes/PutIndexesOperation.js
 import { BulkInsertOperation, BulkInsertOptions } from "./BulkInsertOperation.js";
 import { IDatabaseChanges } from "./Changes/IDatabaseChanges.js";
 import { DocumentSubscriptions } from "./Subscriptions/DocumentSubscriptions.js";
-import { DocumentStore } from "./DocumentStore.js";
 import { TypeUtil } from "../Utility/TypeUtil.js";
 import { CaseInsensitiveKeysMap } from "../Primitives/CaseInsensitiveKeysMap.js";
 import { SessionOptions } from "./Session/SessionOptions.js";
@@ -50,7 +49,8 @@ export abstract class DocumentStoreBase
 
     protected constructor() {
         super();
-        this._subscriptions = new DocumentSubscriptions(this as any as DocumentStore);
+
+        this._subscriptions = new DocumentSubscriptions(this);
     }
 
     public abstract dispose(): void;

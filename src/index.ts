@@ -670,7 +670,6 @@ export * from "./Documents/Changes/DatabaseChangesOptions.js";
 export * from "./Documents/Changes/DocumentChange.js";
 export * from "./Documents/Changes/TimeSeriesChange.js";
 export * from "./Documents/Changes/CounterChange.js";
-export * from "./Documents/Changes/IDatabaseChanges.js";
 export * from "./Documents/Changes/DatabaseChange.js";
 export * from "./Documents/Changes/OperationStatusChange.js";
 export * from "./Documents/Changes/IDatabaseChanges.js";
@@ -746,3 +745,7 @@ export { CONSTANTS } from "./Constants.js";
 
 export * as Json from "./Mapping/Json/index.js";
 export { DocumentStore as default } from "./Documents/DocumentStore.js";
+export * from './Documents/Identity/IHiLoIdGenerator.js';
+export * from './Documents/Identity/HiloIdGenerator.js';
+export * from './Documents/Operations/OperationExecutor.js';
+export * from './Documents/BulkInsertOperation.js';

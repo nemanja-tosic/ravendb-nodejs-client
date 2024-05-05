@@ -1,5 +1,5 @@
 import { IDisposable } from "../../Types/Contracts.js";
-import { DocumentStoreBase } from "../DocumentStoreBase.js";
+import { IDocumentStore } from "../IDocumentStore.js";
 import { IServerOperation, AwaitableServerOperation, OperationIdResult } from "./OperationAbstractions.js";
 import { ClusterRequestExecutor } from "../../Http/ClusterRequestExecutor.js";
 import { RavenCommand } from "../../Http/RavenCommand.js";
@@ -17,17 +17,17 @@ export class ServerOperationExecutor implements IDisposable {
 
     private readonly _cache: Map<string, ServerOperationExecutor>;
     private readonly _nodeTag: string;
-    private readonly _store: DocumentStoreBase;
+    private readonly _store: IDocumentStore;
     private readonly _requestExecutor: ClusterRequestExecutor;
     private readonly _initialRequestExecutor: ClusterRequestExecutor;
 
-    public constructor(store: DocumentStoreBase);
-    public constructor(store: DocumentStoreBase,
+    public constructor(store: IDocumentStore);
+    public constructor(store: IDocumentStore,
                        requestExecutor: ClusterRequestExecutor,
                        initialRequestExecutor: ClusterRequestExecutor,
                        cache: Map<string, ServerOperationExecutor>,
                        nodeTag: string);
-    public constructor(store: DocumentStoreBase,
+    public constructor(store: IDocumentStore,
                        requestExecutor?: ClusterRequestExecutor,
                        initialRequestExecutor?: ClusterRequestExecutor,
                        cache?: Map<string, ServerOperationExecutor>,
@@ -167,7 +167,7 @@ export class ServerOperationExecutor implements IDisposable {
         return topology;
     }
 
-    private static _createRequestExecutor(store: DocumentStoreBase): ClusterRequestExecutor {
+    private static _createRequestExecutor(store: IDocumentStore): ClusterRequestExecutor {
         const args: IRequestExecutorOptions = {
             authOptions: store.authOptions,
             documentConventions: store.conventions

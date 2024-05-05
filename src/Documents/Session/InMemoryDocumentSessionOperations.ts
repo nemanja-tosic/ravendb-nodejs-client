@@ -13,12 +13,10 @@ import {
     AfterConversionToEntityEventArgs
 } from "./SessionEvents.js";
 import { RequestExecutor } from "../../Http/RequestExecutor.js";
-import { IDocumentStore } from "../IDocumentStore.js";
 import { throwError } from "../../Exceptions/index.js";
 import { ServerNode } from "../../Http/ServerNode.js";
 import { DocumentsById, EntityInfo } from "./DocumentsById.js";
 import { DocumentInfo } from "./DocumentInfo.js";
-import { DocumentStoreBase } from "../DocumentStoreBase.js";
 import {
     ICommandData,
     DeleteCommandData,
@@ -52,7 +50,7 @@ import { TransactionMode } from "./TransactionMode.js";
 import { CounterTracking } from "./CounterInternalTypes.js";
 import { CaseInsensitiveKeysMap } from "../../Primitives/CaseInsensitiveKeysMap.js";
 import { CaseInsensitiveStringSet } from "../../Primitives/CaseInsensitiveStringSet.js";
-import { DocumentStore } from "../DocumentStore.js";
+import { IDocumentStore } from "../IDocumentStore.js";
 import { SessionOptions } from "./SessionOptions.js";
 import { ClusterTransactionOperationsBase } from "./ClusterTransactionOperationsBase.js";
 import { BatchCommandResult } from "./Operations/BatchCommandResult.js";
@@ -154,7 +152,7 @@ export abstract class InMemoryDocumentSessionOperations
 
     public deletedEntities: DeletedEntitiesHolder = new DeletedEntitiesHolder();
 
-    protected _documentStore: DocumentStoreBase;
+    protected _documentStore: IDocumentStore;
 
     private readonly _databaseName: string;
 
@@ -234,7 +232,7 @@ export abstract class InMemoryDocumentSessionOperations
     protected _sessionInfo: SessionInfo;
 
     protected constructor(
-        documentStore: DocumentStore,
+        documentStore: IDocumentStore,
         id: string,
         options: SessionOptions) {
         super();

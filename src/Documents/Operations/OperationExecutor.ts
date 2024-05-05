@@ -7,7 +7,6 @@ import {
 import { RequestExecutor } from "../../Http/RequestExecutor.js";
 import { RavenCommand } from "../../Http/RavenCommand.js";
 import { throwError } from "../../Exceptions/index.js";
-import { DocumentStoreBase } from "../DocumentStoreBase.js";
 import { SessionInfo } from "../Session/IDocumentSession.js";
 import { PatchOperation, PatchOperationResult } from "./PatchOperation.js";
 import { DocumentType } from "../DocumentAbstractions.js";
@@ -22,9 +21,9 @@ export class OperationExecutor {
     private readonly _databaseName: string;
     private readonly _requestExecutor: RequestExecutor;
 
-    public constructor(store: DocumentStoreBase);
+    public constructor(store: IDocumentStore);
     public constructor(store: IDocumentStore, databaseName?: string);
-    public constructor(store: DocumentStoreBase, databaseName?: string) {
+    public constructor(store: IDocumentStore, databaseName?: string) {
         this._store = store;
         this._databaseName = databaseName ?? store.database;
         if (!StringUtil.isNullOrWhitespace(this._databaseName)) {

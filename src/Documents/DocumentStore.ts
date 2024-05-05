@@ -23,7 +23,7 @@ import { wrapWithTimeout } from "../Utility/PromiseUtil.js";
 
 const log = getLogger({ module: "DocumentStore" });
 
-export class DocumentStore extends DocumentStoreBase {
+export class DocumentStore extends DocumentStoreBase implements IDocumentStore {
 
     private _log =
         getLogger({ module: "DocumentStore-" + Math.floor(Math.random() * 1000) });

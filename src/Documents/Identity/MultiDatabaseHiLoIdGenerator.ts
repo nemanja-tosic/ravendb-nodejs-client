@@ -1,5 +1,5 @@
 import { MultiTypeHiLoIdGenerator } from "./MultiTypeHiLoIdGenerator.js";
-import { DocumentStore } from "../DocumentStore.js";
+import { IDocumentStore } from "../IDocumentStore.js";
 import { IRavenObject } from "../../Types/IRavenObject.js";
 import { DocumentStoreBase } from "../DocumentStoreBase.js";
 import { IHiLoIdGenerator } from "./IHiLoIdGenerator.js";
@@ -8,11 +8,11 @@ import { ObjectTypeDescriptor } from "../../Types/index.js";
 
 export class MultiDatabaseHiLoIdGenerator implements IHiLoIdGenerator {
 
-    protected readonly _store: DocumentStore;
+    protected readonly _store: IDocumentStore;
 
     private _generators: IRavenObject<MultiTypeHiLoIdGenerator> = {};
 
-    constructor(store: DocumentStore) {
+    constructor(store: IDocumentStore) {
         this._store = store;
     }
 

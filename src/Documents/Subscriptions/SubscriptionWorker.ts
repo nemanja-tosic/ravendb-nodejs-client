@@ -1,7 +1,7 @@
 import { IDisposable } from "../../Types/Contracts.js";
 import { DocumentType } from "../DocumentAbstractions.js";
 import { getLogger } from "../../Utility/LogUtil.js";
-import { DocumentStore } from "../DocumentStore.js";
+import { IDocumentStore } from "../IDocumentStore.js";
 import { SubscriptionWorkerOptions } from "./SubscriptionWorkerOptions.js";
 import { SubscriptionBatch } from "./SubscriptionBatch.js";
 import { Socket } from "node:net";
@@ -44,7 +44,7 @@ export class SubscriptionWorker<T extends object> implements IDisposable {
     private readonly _documentType: DocumentType<T>;
     private readonly _revisions: boolean;
     private readonly _logger = getLogger({ module: "SubscriptionWorker" });
-    private readonly _store: DocumentStore;
+    private readonly _store: IDocumentStore;
     private readonly _dbName: string;
     private _processingCanceled = false;
     private readonly _options: SubscriptionWorkerOptions<T>;
@@ -56,7 +56,7 @@ export class SubscriptionWorker<T extends object> implements IDisposable {
     private _emitter = new EventEmitter();
 
     public constructor(options: SubscriptionWorkerOptions<T>,
-                       withRevisions: boolean, documentStore: DocumentStore, dbName: string) {
+                       withRevisions: boolean, documentStore: IDocumentStore, dbName: string) {
         this._documentType = options.documentType;
         this._options = Object.assign({
             strategy: "OpenIfFree",

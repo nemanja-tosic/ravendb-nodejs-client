@@ -1,5 +1,5 @@
 import { IDisposable } from "../../Types/Contracts.js";
-import { DocumentStore } from "../DocumentStore.js";
+import { IDocumentStore } from "../IDocumentStore.js";
 import { SubscriptionCreationOptions } from "./SubscriptionCreationOptions.js";
 import { DocumentType } from "../DocumentAbstractions.js";
 import { TypeUtil } from "../../Utility/TypeUtil.js";
@@ -26,10 +26,10 @@ import { QueryToken } from "../Session/Tokens/QueryToken.js";
 import { EOL } from "../../Utility/OsUtil.js";
 
 export class DocumentSubscriptions implements IDisposable {
-    private readonly _store: DocumentStore;
+    private readonly _store: IDocumentStore;
     private readonly _subscriptions: Map<IDisposable, boolean> = new Map();
 
-    public constructor(store: DocumentStore) {
+    public constructor(store: IDocumentStore) {
         this._store = store;
     }
 

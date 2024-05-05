@@ -17,7 +17,7 @@ import { throwError } from "../../Exceptions/index.js";
 import { DocumentType } from "../DocumentAbstractions.js";
 import { LoadOperation } from "./Operations/LoadOperation.js";
 import { InMemoryDocumentSessionOperations } from "./InMemoryDocumentSessionOperations.js";
-import { DocumentStore } from "../DocumentStore.js";
+import { IDocumentStore } from "../IDocumentStore.js";
 import { GetDocumentsCommand } from "../Commands/GetDocumentsCommand.js";
 import { HeadDocumentCommand } from "../Commands/HeadDocumentCommand.js";
 import { LoadStartingWithOperation } from "./Operations/LoadStartingWithOperation.js";
@@ -99,7 +99,7 @@ export interface IStoredRawEntityInfo {
 export class DocumentSession extends InMemoryDocumentSessionOperations
     implements IDocumentSession, IDocumentSessionImpl {
 
-    public constructor(documentStore: DocumentStore, id: string, options: SessionOptions) {
+    public constructor(documentStore: IDocumentStore, id: string, options: SessionOptions) {
         super(documentStore, id, options);
 
     }
