@@ -7,7 +7,9 @@ import { OperationStatusChange } from "./OperationStatusChange.js";
 import { DatabaseConnectionState } from "./DatabaseConnectionState.js";
 import { ChangesObservable } from "./ChangesObservable.js";
 import { throwError } from "../../Exceptions/index.js";
-import { WebSocket, ClientOptions, Data } from "ws";
+// NOTE: type import is needed here in order for tree shaking to work
+//  when not using the document store in the final bundle (e.g. for cloudflare pages)
+import type { WebSocket, ClientOptions, Data } from "ws";
 import { StringUtil } from "../../Utility/StringUtil.js";
 import { EventEmitter } from "node:events";
 import { defer } from "../../Utility/PromiseUtil.js";
@@ -99,7 +101,7 @@ export class DatabaseChanges implements IDatabaseChanges {
     }
 
     public get connected() {
-        return this._client && this._client.readyState === WebSocket.OPEN;
+        return this._client && this._client.readyState === 1;
     }
 
     public on(eventName: "connectionStatus", handler: () => void): this;
